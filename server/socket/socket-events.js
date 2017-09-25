@@ -5,18 +5,19 @@ let roomManager = new RoomManager();
 
 let bindClientEvents = socket => {
   socket.on("join_room", (room_id, room_secret) => {
-    if (roomManager.isRoomPassword(room_id, room_secret)) {
-      room = roomManager.get(room_id);
+    room = roomManager.getRoom(room_id, room_secret);
+    // Join a room fam
+    if (room !== null) {
       socket.join(room_id);
-      socket.send({
-        type: "join_request_success"
-      });
+      room.addParticipant(socket);
     } else {
       socket.send({
         type: "join_request_failed"
       });
     }
   });
+
+  socket.on("disconnect", () => this.roomManager.removeClient(socket.id));
 };
 
 let io = new socketio();
