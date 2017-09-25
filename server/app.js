@@ -1,6 +1,6 @@
 import http from "http";
 import io from "./socket-events";
-import expressApp from "./express-app";
+import app from "./express-app";
 
 /**
  * Shared entrypoint for the socketio server and express app.
@@ -10,7 +10,7 @@ import expressApp from "./express-app";
 
 export default function makeServer() {
   let server = http.Server(app);
-  io.bind(server);
+  io.attach(server);
 
   return server;
 }

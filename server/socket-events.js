@@ -19,7 +19,7 @@ let bindClientEvents = socket => {
   });
 };
 
-let io = socketio();
+let io = new socketio();
 io.on("connect", socket => {
   console.log("got socket client", socket.id);
   bindClientEvents(socket);

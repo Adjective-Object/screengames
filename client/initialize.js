@@ -3,7 +3,7 @@ import DrawingRenderer from "./pictionary/DrawingRenderer.js";
 import io from "socket.io-client";
 
 document.addEventListener("DOMContentLoaded", () => {
-  let socket = io(window.location.origin);
+  let socket = io();
 
   let drawing = new Drawing();
   let renderer = new DrawingRenderer();

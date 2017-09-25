@@ -8,7 +8,8 @@
   "scripts": {
     "start": "brunch watch --server",
     "build": "brunch build --production",
-    "format": "prettier --write 'client/**/*.js' 'server/**/*.js'"
+    "format": "prettier --write 'client/**/*.js' 'server/**/*.js'",
+    "dev-server": "nodemon --watch server --exec babel-node server/run-app.js --presets latest"
   },
   "dependencies": {
     "express": "^4.15.4",
@@ -18,6 +19,7 @@
   "devDependencies": {
     "auto-reload-brunch": "^2",
     "babel-brunch": "~6.0",
+    "babel-cli": "^6.26.0",
     "babel-preset-latest": "^6",
     "brunch": "^2",
     "clean-css-brunch": "^2",
