@@ -31,10 +31,8 @@ export default class Drawing {
 
   __addPointToStroke(stroke_id, point) {
     if (this.strokes.hasOwnProperty(stroke_id)) {
-      console.log("append to existing stroke");
       this.strokes[stroke_id].points.push(point);
     } else {
-      console.log("got new stroke??");
       this.strokes[stroke_id] = {
         points: [point]
       };
@@ -46,11 +44,9 @@ export default class Drawing {
     switch (event.type) {
       case "add_stroke":
       case "append_stroke":
-        console.log(event);
         this.__addPointToStroke(event.stroke_id, event.point);
         return true;
       default:
-        console.error("Drawing can't ingest event", event);
         return false;
     }
   }
