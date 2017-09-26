@@ -16,8 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   socket.on("event", event => {
     if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
-      console.log("re-render", drawing);
-
       renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
     }
   });
