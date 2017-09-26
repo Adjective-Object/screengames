@@ -20,6 +20,7 @@ export default class SocketEventQueue {
     this.maxSeq = 0;
     this.pendingSeq = [];
     this.queuedSeq = [];
+    this.outgoingEvents = [];
   }
 
   ingestEvent(event) {
@@ -90,8 +91,14 @@ export default class SocketEventQueue {
   }
 
   __sendEvent(event) {
-    if (this.onSendEvent) {
-      this.onSendEvent(event);
-    }
+    this.outgoingEvents.push(event);
+  }
+
+  getEvents(event) {
+    return this.outgoingEvents;
+  }
+
+  clearEvents(event) {
+    this.outgoingEvents = [];
   }
 }

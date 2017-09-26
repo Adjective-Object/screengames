@@ -2,12 +2,9 @@ import SocketEventQueue from "../SocketEventQueue";
 
 describe("SocketEventQueue", () => {
   let queue;
-  let sent_events;
 
   beforeEach(() => {
     queue = new SocketEventQueue(400);
-    sent_events = [];
-    queue.onSendEvent = event => sent_events.push(event);
   });
 
   it("throws an error when receiving an event without a seq", () => {
@@ -30,17 +27,17 @@ describe("SocketEventQueue", () => {
     let evt2 = { seq: 2, payload: "It's Ya Boi" };
     let evt3 = { seq: 3, payload: "Frank" };
     queue.ingestEvent(evt1);
-    expect(sent_events).toEqual([evt1]);
+    expect(queue.getEvents()).toEqual([evt1]);
     queue.ingestEvent(evt2);
-    expect(sent_events).toEqual([evt1, evt2]);
+    expect(queue.getEvents()).toEqual([evt1, evt2]);
     queue.ingestEvent(evt3);
-    expect(sent_events).toEqual([evt1, evt2, evt3]);
+    expect(queue.getEvents()).toEqual([evt1, evt2, evt3]);
   });
 
   it("throws an error when receiving an event multiple times", () => {
     let evt1 = { seq: 1, payload: "Hey Guys, sorry I haven't been updating" };
     queue.ingestEvent(evt1);
-    expect(sent_events).toEqual([evt1]);
+    expect(queue.getEvents()).toEqual([evt1]);
     expect(() => queue.ingestEvent(evt1)).toThrow();
   });
 
@@ -65,15 +62,15 @@ describe("SocketEventQueue", () => {
     let evt3 = { seq: 3 };
     let evt4 = { seq: 4 };
     queue.ingestEvent(evt3);
-    expect(sent_events).toEqual(
+    expect(queue.getEvents()).toEqual(
       [],
       "No event should be send when pending messages exist"
     );
     queue.ingestEvent(evt2);
-    expect(sent_events).toEqual([]);
+    expect(queue.getEvents()).toEqual([]);
     queue.ingestEvent(evt4);
-    expect(sent_events).toEqual([]);
+    expect(queue.getEvents()).toEqual([]);
     queue.ingestEvent(evt1);
-    expect(sent_events).toEqual([evt1, evt2, evt3, evt4]);
+    expect(queue.getEvents()).toEqual([evt1, evt2, evt3, evt4]);
   });
 });
