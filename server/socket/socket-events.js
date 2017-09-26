@@ -1,23 +1,25 @@
 import socketio from "socket.io";
-import RoomManager from "./RoomManager";
+import RoomRouter from "../room/RoomRouter";
 
-let roomManager = new RoomManager();
+let roomRouter = new RoomRouter();
 
 let bindClientEvents = socket => {
-  socket.on("join_room", (room_id, room_secret) => {
-    room = roomManager.getRoom(room_id, room_secret);
-    // Join a room fam
-    if (room !== null) {
-      socket.join(room_id);
-      room.addParticipant(socket);
+  roomRouter.addUser(socket);
+
+  socket.on("join_room", room_id => {
+    roomRouter.addUserToRoom(socket.id, room_id);
+  });
+
+  socket.on("event", event => {
+    let room = roomRouter.getRoomForUser(socket.id);
+    if (room) {
+      room.processClientEvent(socket.id, event);
     } else {
-      socket.send({
-        type: "join_request_failed"
-      });
+      console.log(`client ${socket.id} is not in a room?`);
     }
   });
 
-  socket.on("disconnect", () => this.roomManager.removeClient(socket.id));
+  socket.on("disconnect", () => roomRouter.removeUser(socket));
 };
 
 let io = new socketio();

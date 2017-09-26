@@ -1,5 +1,5 @@
 import Pictionary from "../games/Pictionary";
-
+import { mapValues } from "lodash";
 /*
 type Participant {
     socket: io.Socket,
@@ -11,6 +11,7 @@ type Participant {
 
 class Room {
   constructor(room_id) {
+    this.id = room_id;
     this.currentGame = new Pictionary(this);
     this.participants = {};
   }
@@ -19,13 +20,13 @@ class Room {
    * Takes in an event from a client and process it. If the event is not
    * recognized by the Room handler, passes it off to the current Game
    */
-  processClientEvent(event) {
+  processClientEvent(user_id, event) {
     if (event.type === undefined) {
       console.error(`got typeless event ${event}`);
       return;
     }
 
-    this.currentGame.processClientEvent(event);
+    this.currentGame.processClientEvent(user_id, event);
   }
 
   addParticipant(user) {
@@ -38,43 +39,61 @@ class Room {
     user.socket.send({
       seq: user.seq++,
       type: "join_request_success",
-      participant_userData: this.participants.map(
+      participant_user_data: mapValues(
+        this.participants,
         participant => participant.userData
       ),
       initial_state: this.currentGame.getState()
     });
 
-    this.__updateUserData(user.id, {})
+    this.updateUserData(user.id, {});
   }
 
   removeParticipant(user_id) {
-    this.__broadcast({
-      type: 'remove_user',
-      user_id: user_id,
+    this.broadcast({
+      type: "remove_user",
+      user_id: user_id
     });
     delete this.participants[user_id];
   }
 
   isEmpty() {
-    return Object.keys(this.participants).length === 0
+    return Object.keys(this.participants).length === 0;
   }
 
   updateUserData(user_id, user_data) {
-    this.users[user_id].userData = user_data;
+    let participant = this.participants[user_id];
+    participant.userData = user_data;
     // Broadcast the change to the members of the room
-    this.__broadcast({
+    this.broadcast({
       type: "update_user",
-      user_id: user.id,
-      userData: participant.userData,
+      user_id: user_id,
+      userData: participant.userData
     });
   }
 
-  broadcast(message) {
-    this.participants.map(participant =>
-      participant.socket.send(Object.assign({
-        seq: participant.seq++,
-      }, message))
-    );    
+  broadcast(message, opts = {}) {
+    let exclude = opts.exclude || [];
+    Object.keys(this.participants).map(participant_id => {
+      // Exclude some participants from the broadcast
+      if (exclude.indexOf(participant_id) !== -1) {
+        return;
+      }
+      let participant = this.participants[participant_id];
+      participant.user.socket.emit(
+        "event",
+        Object.assign(
+          {
+            seq: participant.user.seq++
+          },
+          message
+        )
+      );
+    });
+  }
+
+  getParticipantIDs() {
+    return Object.keys(this.participants);
   }
 }
 
