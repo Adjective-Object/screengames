@@ -1,15 +1,15 @@
 export default class DrawingRenderer {
-  renderDrawingToSVG(drawing, svg) {
+  renderDrawingToSVG(drawing, drawing_client, svg) {
     svg.innerHTML = "";
     for (let strokeID of drawing.strokeOrder) {
       // Insert a new line as the last child of the svg
       svg.appendChild(this.__renderBaseStroke(drawing.strokes[strokeID]));
 
-      if (strokeID == drawing.currentStrokeID) {
+      if (strokeID == drawing_client.currentStrokeID) {
         svg.appendChild(
           this.__renderPendingLine(
             drawing.strokes[strokeID],
-            drawing.pendingSample
+            drawing_client.pendingSample
           )
         );
       }

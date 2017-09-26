@@ -1,20 +1,26 @@
 import Drawing from "./pictionary/Drawing.js";
+import DrawingClient from "./pictionary/DrawingClient.js";
 import DrawingRenderer from "./pictionary/DrawingRenderer.js";
 import io from "socket.io-client";
 
 document.addEventListener("DOMContentLoaded", () => {
-  let socket = io();
-  socket.on('connect', () => {
-    socket.emit('join_room', 'default');
-  })
-
-  socket.on('event', (event) => {
-    console.log('got event', event);
-  })
-
   let drawing = new Drawing();
+  let drawing_client = new DrawingClient();
   let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById("draw-target");
+
+  let socket = io();
+  socket.on("connect", () => {
+    socket.emit("join_room", "default");
+  });
+
+  socket.on("event", event => {
+    if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
+      console.log("re-render", drawing);
+
+      renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
+    }
+  });
 
   // Convert from DOM space to canvas space based on the current SVG bounding
   // rectangle and the viewbox of the rtarget
@@ -39,55 +45,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Common handlers for handling a drawing
   function handleMouseChange(method, mouse_event) {
-    let [drawingWasUpdated, event] = method(
+    let [should_re_render, drawing_event] = method(
       transformToCanvasSpace(mouse_event),
       new Date().getTime()
     );
-    if (event) {
-      socket.emit('event', event);
+    if (drawing_event !== null) {
+      drawing.ingestEvent(drawing_event);
+      socket.emit("event", drawing_event);
     }
-    if (drawingWasUpdated) {
-      renderer.renderDrawingToSVG(drawing, drawTarget);
+    if (should_re_render) {
+      renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
     }
   }
 
   // Bind mouse events
-  drawTarget.addEventListener("mousedown",
-    (e) => handleMouseChange(
-      drawing.startNewStroke.bind(drawing), e
-    )
+  drawTarget.addEventListener("mousedown", e =>
+    handleMouseChange(drawing_client.startNewStroke.bind(drawing_client), e)
   );
-  drawTarget.addEventListener("mousemove",
-    (e) => handleMouseChange(
-      drawing.sampleMovement.bind(drawing), e
-    )
+  drawTarget.addEventListener("mousemove", e =>
+    handleMouseChange(drawing_client.sampleMovement.bind(drawing_client), e)
   );
-  drawTarget.addEventListener("mouseup",
-    (e) => handleMouseChange(
-      drawing.finishCurrentStroke.bind(drawing), e
+  drawTarget.addEventListener("mouseup", e =>
+    handleMouseChange(
+      drawing_client.finishCurrentStroke.bind(drawing_client),
+      e
     )
   );
 
   // Bind equivalent handlers for touch events
   drawTarget.addEventListener("touchstart", e => {
     handleMouseChange(
-      drawing.startNewStroke.bind(drawing),
-      e.changedTouches[0],
+      drawing_client.startNewStroke.bind(drawing_client),
+      e.changedTouches[0]
     );
     // Prevent double-tap-to-zoom
     e.preventDefault();
   });
   document.addEventListener("touchmove", e => {
     handleMouseChange(
-      drawing.sampleMovement.bind(drawing),
-      e.changedTouches[0],
+      drawing_client.sampleMovement.bind(drawing_client),
+      e.changedTouches[0]
     );
     // Prevent pinch zooming
   });
   document.addEventListener("touchend", e => {
     handleMouseChange(
-      drawing.finishCurrentStroke.bind(drawing),
-      e.changedTouches[0],
+      drawing_client.finishCurrentStroke.bind(drawing_client),
+      e.changedTouches[0]
     );
   });
 });

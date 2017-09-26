@@ -1,9 +1,3 @@
-import guid from "../util/guid";
-
-function distance(p1, p2) {
-  return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
-}
-
 /*
 interface Point {
     x: float,
@@ -25,11 +19,6 @@ interface Drawing {
 
 export default class Drawing {
   constructor(props) {
-    // Config
-    this.distanceThreshold = 10;
-    this.timeDistanceThreshold = 2;
-    this.timeDifferenceThreshold = 400;
-
     // Long-lived state
     this.strokes = {};
     this.strokeOrder = [];
@@ -40,54 +29,35 @@ export default class Drawing {
     this.pendingSample = null;
   }
 
-  startNewStroke(point, time) {
-    // TODO color ?
-    this.currentStrokeID = guid();
-    this.strokeOrder.push(this.currentStrokeID);
-    this.strokes[this.currentStrokeID] = {
-      points: [point]
-    };
-    this.pendingSample = point;
-    this.lastSampleTime = time;
-    return true;
+  __addPointToStroke(stroke_id, point) {
+    if (this.strokes.hasOwnProperty(stroke_id)) {
+      console.log("append to existing stroke");
+      this.strokes[stroke_id].points.push(point);
+    } else {
+      console.log("got new stroke??");
+      this.strokes[stroke_id] = {
+        points: [point]
+      };
+      this.strokeOrder.push(stroke_id);
+    }
   }
 
-  sampleMovement(point, time) {
-    // Bail if not in the middle of recording a new stroke
-    if (this.currentStrokeID === null) {
-      return false;
+  ingestEvent(event) {
+    switch (event.type) {
+      case "add_stroke":
+      case "append_stroke":
+        console.log(event);
+        this.__addPointToStroke(event.stroke_id, event.point);
+        return true;
+      default:
+        console.error("Drawing can't ingest event", event);
+        return false;
     }
-
-    let last_point = this.getLastPointOfStroke(this.currentStrokeID);
-    let point_distance = distance(point, last_point);
-    let timeDifference = time - this.lastSampleTime;
-    if (point_distance > this.distanceThreshold) {
-      this.__addPointToCurrentStroke(point, time);
-    } else if (
-      timeDifference > this.timeDifferenceThreshold &&
-      point_distance > this.timeDistanceThreshold
-    ) {
-      this.__addPointToCurrentStroke(point, time);
-    }
-    this.pendingSample = point;
-    return true;
   }
 
-  finishCurrentStroke(point, time) {
-    // Bail if not in the middle of recording a new stroke
-    if (this.currentStrokeID === null) {
-      return false;
-    }
-
-    this.__addPointToCurrentStroke(this.pendingSample, time);
-    this.currentStrokeID = null;
-    this.pendingSample = null;
-    return true;
-  }
-
-  __addPointToCurrentStroke(point, time) {
-    this.strokes[this.currentStrokeID].points.push(point);
-    this.lastSampleTime = time;
+  canIngestEvent(event) {
+    const allowed_events = ["add_stroke", "append_stroke"];
+    return allowed_events.indexOf(event.type) !== -1;
   }
 
   getLastPointOfStroke(stroke_id) {
