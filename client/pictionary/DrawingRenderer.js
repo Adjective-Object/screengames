@@ -29,15 +29,18 @@ export default class DrawingRenderer {
       return circle;
     }
 
-    let points = stroke.points.map(({ x, y }) => x + "," + y);
+    let first_point = `M ${stroke.points[0].x} ${stroke.points[0].y}`;
+    let tail_points = (stroke.points.slice(1).map(({ x, y }) => `L ${x} ${y}`));
+    let points = [first_point].concat(tail_points);
     let points_string = points.join(" ");
-    let polyline = document.createElementNS(
+    let path = document.createElementNS(
       "http://www.w3.org/2000/svg",
-      "polyline"
+      "path"
     );
-    polyline.setAttribute("points", points_string);
-    polyline.setAttribute("style", "fill:none; stroke:black; stroke-width:3");
-    return polyline;
+    path.setAttribute("d", points_string);
+    path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("style", "fill:none; stroke:black; stroke-width:3");
+    return path;
   }
 
   __renderPendingLine(stroke, pending_sample) {
