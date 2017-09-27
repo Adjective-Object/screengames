@@ -1,6 +1,7 @@
-import Drawing from "./pictionary/Drawing.js";
-import DrawingClient from "./pictionary/DrawingClient.js";
-import DrawingRenderer from "./pictionary/DrawingRenderer.js";
+import Drawing from "./pictionary/Drawing";
+import DrawingClient from "./pictionary/DrawingClient";
+import DrawingRenderer from "./pictionary/DrawingRenderer";
+import SocketEventQueue from '../util/socket/SocketEventQueue';
 import io from "socket.io-client";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,6 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let drawing_client = new DrawingClient();
   let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById("draw-target");
+  let eventQueue = new SocketEventQueue();
 
   let socket = io();
   socket.on("connect", () => {
@@ -15,8 +17,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   socket.on("event", event => {
-    if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
-      renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
+    // Queue events
+    eventQueue.ingestEvent(event);
+    let events = eventQueue.getEvents();
+
+    if (events.length > 1) {
+      // Ingest all applicable events to Drawing
+      eventQueue.clearEvents();
+      for (let event of events) {
+        if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
+          renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
+        }        
+      }
     }
   });
 

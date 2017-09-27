@@ -25,7 +25,7 @@ export default class RoomRouter {
 
     let new_user = {
       id: socket.id,
-      seq: 1,
+      seq: 0,
       socket: socket,
       incomingEventQueue: incoming_event_queue
     };
