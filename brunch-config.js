@@ -1,14 +1,14 @@
 // See http://brunch.io for documentation.
 exports.paths = {
     public:  'public',
-    watched: ['client', 'vendor'],
+    watched: ['client', 'vendor', 'util'],
 }
 
 exports.files = {
   javascripts: {
     joinTo: {
       'vendor.js': /node_modules/,
-      'client.js': /^client/,
+      'client.js': /^(client|util)/,
       'server.js': /^server/,
     }
   },

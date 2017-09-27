@@ -1,5 +1,5 @@
 import Room from "./Room";
-import SocketEventQueue from "../socket/SocketEventQueue";
+import SocketEventQueue from "../../util/socket/SocketEventQueue";
 
 /*
 
