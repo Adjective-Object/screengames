@@ -1,7 +1,7 @@
 import Drawing from "./pictionary/Drawing";
 import DrawingClient from "./pictionary/DrawingClient";
 import DrawingRenderer from "./pictionary/DrawingRenderer";
-import SocketEventQueue from '../util/socket/SocketEventQueue';
+import SocketEventQueue from "../util/socket/SocketEventQueue";
 import io from "socket.io-client";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       for (let event of events) {
         if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
           renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
-        }        
+        }
       }
     }
   });
