@@ -46,8 +46,11 @@ export default class Drawing {
         this.strokes = event.initial_state.strokes;
         this.strokeOrder = event.initial_state.strokeOrder;
         return true;
-      case "add_stroke":
       case "append_stroke":
+        if (!this.strokes.hasOwnProperty(event.stroke_id)) {
+          console.warn("got append_stroke for unknown stroke " + append_stroke);
+        }
+      case "add_stroke":
         this.__addPointToStroke(event.stroke_id, event.point);
         return true;
       default:
