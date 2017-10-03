@@ -36,13 +36,18 @@ class Room {
     };
 
     // Send initial information about other users to clients as they join
-    user.socket.send({
+    user.socket.emit("event", {
       seq: user.seq++,
       type: "join_request_success",
       participant_user_data: mapValues(
         this.participants,
         participant => participant.userData
-      ),
+      )
+    });
+
+    user.socket.emit("event", {
+      seq: user.seq++,
+      type: "initialize",
       initial_state: this.currentGame.getState()
     });
 
