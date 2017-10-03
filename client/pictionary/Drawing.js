@@ -42,6 +42,10 @@ export default class Drawing {
 
   ingestEvent(event) {
     switch (event.type) {
+      case "initialize":
+        this.strokes = event.initial_state.strokes;
+        this.strokeOrder = event.initial_state.strokeOrder;
+        return true;
       case "add_stroke":
       case "append_stroke":
         this.__addPointToStroke(event.stroke_id, event.point);
@@ -52,7 +56,7 @@ export default class Drawing {
   }
 
   canIngestEvent(event) {
-    const allowed_events = ["add_stroke", "append_stroke"];
+    const allowed_events = ["add_stroke", "append_stroke", "initialize"];
     return allowed_events.indexOf(event.type) !== -1;
   }
 
