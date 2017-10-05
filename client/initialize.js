@@ -4,6 +4,27 @@ import DrawingRenderer from "./pictionary/DrawingRenderer";
 import SocketEventQueue from "../util/socket/SocketEventQueue";
 import io from "socket.io-client";
 
+// Convert from DOM space to canvas space based on the current SVG bounding
+// rectangle and the viewbox of the rtarget
+function transformToCanvasSpace(draw_target, mouse_event) {
+  let boundingRect = draw_target.getBoundingClientRect();
+  // Get location of the mouse event in SVG space
+  let viewbox_x =
+    (mouse_event.clientX - boundingRect.left) /
+      boundingRect.width *
+      draw_target.viewBox.baseVal.width +
+    draw_target.viewBox.baseVal.x;
+  let viewbox_y =
+    (mouse_event.clientY - boundingRect.top) /
+      boundingRect.height *
+      draw_target.viewBox.baseVal.height +
+    draw_target.viewBox.baseVal.y;
+  return {
+    x: viewbox_x,
+    y: viewbox_y
+  };
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   let drawing = new Drawing();
   let drawing_client = new DrawingClient();
@@ -32,31 +53,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Convert from DOM space to canvas space based on the current SVG bounding
-  // rectangle and the viewbox of the rtarget
-  function transformToCanvasSpace(mouse_event) {
-    let boundingRect = drawTarget.getBoundingClientRect();
-    // Get location of the mouse event in SVG space
-    let viewbox_x =
-      (mouse_event.clientX - boundingRect.left) /
-        boundingRect.width *
-        drawTarget.viewBox.baseVal.width +
-      drawTarget.viewBox.baseVal.x;
-    let viewbox_y =
-      (mouse_event.clientY - boundingRect.top) /
-        boundingRect.height *
-        drawTarget.viewBox.baseVal.height +
-      drawTarget.viewBox.baseVal.y;
-    return {
-      x: viewbox_x,
-      y: viewbox_y
-    };
-  }
-
   // Common handlers for handling a drawing
   function handleMouseChange(method, mouse_event) {
     let [should_re_render, drawing_event] = method(
-      transformToCanvasSpace(mouse_event),
+      transformToCanvasSpace(drawTarget, mouse_event),
       new Date().getTime()
     );
     if (drawing_event !== null) {
