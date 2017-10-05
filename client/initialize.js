@@ -102,4 +102,15 @@ document.addEventListener("DOMContentLoaded", () => {
       e.changedTouches[0]
     );
   });
+
+  let clearCanvasButton = document.getElementById("clear-canvas");
+  clearCanvasButton.addEventListener("click", e => {
+    let clear_canvas_event = {
+      type: "clear_canvas"
+    };
+    if (drawing.ingestEvent(clear_canvas_event)) {
+      renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
+    }
+    socket.emit("event", clear_canvas_event);
+  });
 });
