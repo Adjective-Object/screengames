@@ -1,3 +1,4 @@
+import log from "../../util/log";
 /*
 interface Point {
     x: float,
@@ -43,14 +44,29 @@ export default class Drawing {
   ingestEvent(event) {
     switch (event.type) {
       case "initialize":
+        if (
+          Object.keys(this.strokes).length !== 0 ||
+          this.strokeOrder.length !== 0
+        ) {
+          log.warn(
+            "Initializing non-empty canvas",
+            this.strokes,
+            this.strokeOrder
+          );
+        }
         this.strokes = event.initial_state.strokes;
         this.strokeOrder = event.initial_state.strokeOrder;
         return true;
       case "append_stroke":
         if (!this.strokes.hasOwnProperty(event.stroke_id)) {
-          console.warn("got append_stroke for unknown stroke " + append_stroke);
+          log.warn("got append_stroke for unknown stroke " + event.stroke_id);
         }
+        this.__addPointToStroke(event.stroke_id, event.point);
+        return true;
       case "add_stroke":
+        if (this.strokes.hasOwnProperty(event.stroke_id)) {
+          log.warn("got add_stroke for existing stroke " + event.stroke_id);
+        }
         this.__addPointToStroke(event.stroke_id, event.point);
         return true;
       default:
