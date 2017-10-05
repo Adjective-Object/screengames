@@ -14,8 +14,29 @@ interface Drawing {
     strokes: {
         [key: string]: Stroke
     }
-    strokeOrder: [string];
+    strokeOrder: string[];
 }
+
+interface AddStrokeEvent {
+  type: "add_stroke",
+  stroke_id: string,
+  point: {x: number, y: number}
+}
+
+interface AppendStrokeEvent {
+  type: "append_stroke",
+  stroke_id: string,
+  point: {x: number, y: number}
+}
+
+interface InitializeEvent {
+  type: "initialize",
+  initial_state: {
+    strokes: {[key: string]: Stroke},
+    strokeOrder: string[],
+  }
+}
+
 */
 
 export default class Drawing {
