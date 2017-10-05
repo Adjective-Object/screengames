@@ -49,20 +49,17 @@ export default class DrawingClient {
     };
     this.pendingSample = point;
     this.lastSampleTime = time;
-    return [
-      true,
-      {
-        type: "add_stroke",
-        stroke_id: this.currentStrokeID,
-        point: point
-      }
-    ];
+    return {
+      type: "add_stroke",
+      stroke_id: this.currentStrokeID,
+      point: point
+    };
   }
 
   sampleMovement(point, time) {
     // Bail if not in the middle of recording a new stroke
     if (this.currentStrokeID === null) {
-      return [false, null];
+      return null;
     }
 
     let updated = false;
@@ -82,23 +79,20 @@ export default class DrawingClient {
     this.pendingSample = point;
 
     if (updated) {
-      return [
-        true,
-        {
-          type: "append_stroke",
-          stroke_id: this.currentStrokeID,
-          point: point
-        }
-      ];
+      return {
+        type: "append_stroke",
+        stroke_id: this.currentStrokeID,
+        point: point
+      };
     }
 
-    return [true, null];
+    return null;
   }
 
   finishCurrentStroke(point, time) {
     // Bail if not in the middle of recording a new stroke
     if (this.currentStrokeID === null) {
-      return [false, null];
+      return null;
     }
 
     let current_stroke_id = this.currentStrokeID;
@@ -110,7 +104,7 @@ export default class DrawingClient {
     this.__addPointToCurrentStroke(this.pendingSample, time);
     this.currentStrokeID = null;
     this.pendingSample = null;
-    return [true, event];
+    return event;
   }
 
   __addPointToCurrentStroke(point, time) {

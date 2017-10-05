@@ -55,17 +55,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Common handlers for handling a drawing
   function handleMouseChange(method, mouse_event) {
-    let [should_re_render, drawing_event] = method(
+    let drawing_event = method(
       transformToCanvasSpace(drawTarget, mouse_event),
       new Date().getTime()
     );
-    if (drawing_event !== null) {
-      drawing.ingestEvent(drawing_event);
-      socket.emit("event", drawing_event);
-    }
-    if (should_re_render) {
+    if (drawing_event === null) return;
+    if (drawing.ingestEvent(drawing_event)) {
       renderer.renderDrawingToSVG(drawing, drawing_client, drawTarget);
     }
+    socket.emit("event", drawing_event);
   }
 
   // Bind mouse events
