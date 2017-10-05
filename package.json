@@ -12,6 +12,7 @@
     "dev-server": "nodemon --watch server --exec babel-node server/run-app.js --presets latest"
   },
   "dependencies": {
+    "bunyan": "^1.8.12",
     "express": "^4.15.4",
     "lodash": "^4.17.4",
     "socket.io": "^2.0.3",
