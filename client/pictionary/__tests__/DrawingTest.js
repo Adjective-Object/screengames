@@ -191,19 +191,21 @@ describe("Drawing", () => {
     }
   };
 
+  let init_event = {
+    type: "initialize",
+    initial_state: {
+      strokes: {
+        a: { points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
+        b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
+      },
+      strokeOrder: ["a", "b"]
+    }
+  };
+
   const test_clear_stroke_data = {
     "removes an existing stroke when it exists": {
       events: [
-        {
-          type: "initialize",
-          initial_state: {
-            strokes: {
-              a: { points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
-              b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
-            },
-            strokeOrder: ["a", "b"]
-          }
-        },
+        init_event,
         {
           type: "clear_stroke",
           stroke_id: "a"
@@ -217,16 +219,7 @@ describe("Drawing", () => {
     },
     "logs a warning when the cleared stroke does not exist": {
       events: [
-        {
-          type: "initialize",
-          initial_state: {
-            strokes: {
-              a: { points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
-              b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
-            },
-            strokeOrder: ["a", "b"]
-          }
-        },
+        init_event,
         {
           type: "clear_stroke",
           stroke_id: "c"
@@ -238,6 +231,20 @@ describe("Drawing", () => {
       },
       expected_stroke_order: ["a", "b"],
       expected_warning_count: 1
+    }
+  };
+
+  const test_clear_canvas_data = {
+    "removes all strokes when run": {
+      events: [
+        init_event,
+        {
+          type: "clear_canvas"
+        }
+      ],
+      expected_strokes: {},
+      expected_stroke_order: [],
+      expected_warning_count: 0
     }
   };
 
@@ -272,5 +279,9 @@ describe("Drawing", () => {
 
   describe("when ingesting a clear_stroke event", () => {
     dataProvider(test_clear_stroke_data)(testDrawing);
+  });
+
+  describe("when ingesting a clear_canvas event", () => {
+    dataProvider(test_clear_canvas_data)(testDrawing);
   });
 });

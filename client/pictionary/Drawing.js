@@ -70,10 +70,7 @@ export default class Drawing {
   ingestEvent(event) {
     switch (event.type) {
       case "initialize":
-        if (
-          Object.keys(this.strokes).length !== 0 ||
-          this.strokeOrder.length !== 0
-        ) {
+        if (!this.isEmpty()) {
           log.warn(
             "Initializing non-empty canvas",
             this.strokes,
@@ -103,6 +100,11 @@ export default class Drawing {
         delete this.strokes[event.stroke_id];
         this.strokeOrder.splice(this.strokeOrder.indexOf(event.stroke_id), 1);
         return true;
+      case "clear_canvas":
+        let needs_render = !this.isEmpty();
+        this.strokes = {};
+        this.strokeOrder = [];
+        return needs_render;
       default:
         return false;
     }
@@ -113,7 +115,8 @@ export default class Drawing {
       "add_stroke",
       "append_stroke",
       "initialize",
-      "clear_stroke"
+      "clear_stroke",
+      "clear_canvas"
     ];
     return allowed_events.indexOf(event.type) !== -1;
   }
@@ -121,5 +124,11 @@ export default class Drawing {
   getLastPointOfStroke(stroke_id) {
     let points = this.strokes[stroke_id].points;
     return points[points.length - 1];
+  }
+
+  isEmpty() {
+    return (
+      Object.keys(this.strokes).length === 0 && this.strokeOrder.length === 0
+    );
   }
 }
