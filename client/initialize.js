@@ -72,10 +72,10 @@ document.addEventListener("DOMContentLoaded", () => {
   drawTarget.addEventListener("mousedown", e =>
     handleMouseChange(drawing_client.startNewStroke.bind(drawing_client), e)
   );
-  drawTarget.addEventListener("mousemove", e =>
+  document.addEventListener("mousemove", e =>
     handleMouseChange(drawing_client.sampleMovement.bind(drawing_client), e)
   );
-  drawTarget.addEventListener("mouseup", e =>
+  document.addEventListener("mouseup", e =>
     handleMouseChange(
       drawing_client.finishCurrentStroke.bind(drawing_client),
       e
