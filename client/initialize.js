@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
     eventQueue.ingestEvent(event);
     let events = eventQueue.getEvents();
 
-    if (events.length > 1) {
+    if (events.length >= 1) {
       // Ingest all applicable events to Drawing
       eventQueue.clearEvents();
       for (let event of events) {
