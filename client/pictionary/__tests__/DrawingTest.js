@@ -191,6 +191,56 @@ describe("Drawing", () => {
     }
   };
 
+  const test_clear_stroke_data = {
+    "removes an existing stroke when it exists": {
+      events: [
+        {
+          type: "initialize",
+          initial_state: {
+            strokes: {
+              a: { points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
+              b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
+            },
+            strokeOrder: ["a", "b"]
+          }
+        },
+        {
+          type: "clear_stroke",
+          stroke_id: "a"
+        }
+      ],
+      expected_strokes: {
+        b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
+      },
+      expected_stroke_order: ["b"],
+      expected_warning_count: 0
+    },
+    "logs a warning when the cleared stroke does not exist": {
+      events: [
+        {
+          type: "initialize",
+          initial_state: {
+            strokes: {
+              a: { points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
+              b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
+            },
+            strokeOrder: ["a", "b"]
+          }
+        },
+        {
+          type: "clear_stroke",
+          stroke_id: "c"
+        }
+      ],
+      expected_strokes: {
+        a: { points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
+        b: { points: [{ x: 3, y: 3 }, { x: 4, y: 4 }] }
+      },
+      expected_stroke_order: ["a", "b"],
+      expected_warning_count: 1
+    }
+  };
+
   function testDrawing({
     events = [],
     expected_strokes = {},
@@ -216,7 +266,11 @@ describe("Drawing", () => {
     dataProvider(test_append_stroke_data)(testDrawing);
   });
 
-  describe("when consuming an initialize event", () => {
+  describe("when ingesting an initialize event", () => {
     dataProvider(test_initialize_data)(testDrawing);
+  });
+
+  describe("when ingesting a clear_stroke event", () => {
+    dataProvider(test_clear_stroke_data)(testDrawing);
   });
 });

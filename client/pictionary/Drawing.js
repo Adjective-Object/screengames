@@ -37,6 +37,11 @@ interface InitializeEvent {
   }
 }
 
+interface ClearEvent {
+  type: "clear_stroke":,
+  stroke_id: string,
+}
+
 */
 
 export default class Drawing {
@@ -90,13 +95,26 @@ export default class Drawing {
         }
         this.__addPointToStroke(event.stroke_id, event.point);
         return true;
+      case "clear_stroke":
+        if (!this.strokes.hasOwnProperty(event.stroke_id)) {
+          log.warn(`got clear_stroke for unknown stroke_id ${event.stroke_id}`);
+          return false;
+        }
+        delete this.strokes[event.stroke_id];
+        this.strokeOrder.splice(this.strokeOrder.indexOf(event.stroke_id), 1);
+        return true;
       default:
         return false;
     }
   }
 
   canIngestEvent(event) {
-    const allowed_events = ["add_stroke", "append_stroke", "initialize"];
+    const allowed_events = [
+      "add_stroke",
+      "append_stroke",
+      "initialize",
+      "clear_stroke"
+    ];
     return allowed_events.indexOf(event.type) !== -1;
   }
 
