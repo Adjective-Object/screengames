@@ -1,4 +1,4 @@
-import guid from "../util/guid";
+import guid from "../../util/guid";
 
 function distance(p1, p2) {
   return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
@@ -23,7 +23,7 @@ interface Drawing {
 }
 */
 
-export default class DrawingClient {
+export default class PenTool {
   constructor(props) {
     // Config
     this.distanceThreshold = 10;
@@ -40,7 +40,8 @@ export default class DrawingClient {
     this.pendingSample = null;
   }
 
-  startNewStroke(point, time) {
+  onTouchStart(points, time) {
+    let point = points[0];
     // TODO color ?
     this.currentStrokeID = guid();
     this.strokeOrder.push(this.currentStrokeID);
@@ -56,11 +57,12 @@ export default class DrawingClient {
     };
   }
 
-  sampleMovement(point, time) {
+  onTouchMove(points, time) {
     // Bail if not in the middle of recording a new stroke
     if (this.currentStrokeID === null) {
       return null;
     }
+    let point = points[0];
 
     let updated = false;
     let last_point = this.getLastPointOfStroke(this.currentStrokeID);
@@ -89,11 +91,12 @@ export default class DrawingClient {
     return null;
   }
 
-  finishCurrentStroke(point, time) {
+  onTouchEnd(points, time) {
     // Bail if not in the middle of recording a new stroke
     if (this.currentStrokeID === null) {
       return null;
     }
+    let point = points[0];
 
     let current_stroke_id = this.currentStrokeID;
     let event = {
