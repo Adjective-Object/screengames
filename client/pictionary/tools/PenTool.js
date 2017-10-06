@@ -110,6 +110,10 @@ export default class PenTool {
     return event;
   }
 
+  isActive() {
+    return this.current_stroke_id === null;
+  }
+
   __addPointToCurrentStroke(point, time) {
     this.strokes[this.currentStrokeID].points.push(point);
     this.lastSampleTime = time;
