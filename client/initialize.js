@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let pen_tool = new PenTool();
   let tools = {
     pen_tool: pen_tool,
+    canvas_panning_tool: new CanvasPanningTool()
   };
   let current_tool = tools["pen_tool"];
 
