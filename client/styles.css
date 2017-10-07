@@ -53,10 +53,15 @@ body {
 }
 
 .tool-button svg {
-  height: 50%;
-  transition: opacity 0.2s filter 0.2s;
+  height: 24px;
+  width: 24px;
+  transition: fill 0.15s;
 }
 
 .tool-button:active svg {
-  opacity: 0.6;
+  fill: rgba(255,255,255,0.5);
+}
+
+.tool-button.selected svg {
+  fill: #3498DB;
 }

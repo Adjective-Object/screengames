@@ -42,6 +42,18 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas_panning_tool: new CanvasPanningTool()
   };
   let current_tool = tools["pen_tool"];
+  const setActiveTool = tool_elem => {
+    // Set the current tool from the tool's id
+    const tool_id = tool_elem.getAttribute("tool-id");
+    if (!tools.hasOwnProperty(tool_id) || current_tool.isActive()) return;
+    current_tool = tools[tool_id];
+    // Set the '.selected' class only on the active tool button
+    Array.from(document.querySelectorAll("[tool-id]")).map(element => {
+      element.classList.remove("selected");
+    });
+    tool_elem.classList.add("selected");
+  };
+  setActiveTool(document.querySelector('[tool-id="pen_tool"]'));
 
   let socket = io();
   socket.on("connect", () => {
@@ -135,9 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   Array.from(document.querySelectorAll("[tool-id]")).map(button => {
     button.addEventListener("click", e => {
-      const tool_id = e.currentTarget.getAttribute("tool-id");
-      if (!tools.hasOwnProperty(tool_id) || current_tool.isActive()) return;
-      current_tool = tools[tool_id];
+      setActiveTool(e.currentTarget);
     });
   });
 
@@ -162,7 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const drawingContainer = document.getElementById("drawing-container");
   const resizeDrawingToContainer = resize_event => {
     let container_box = drawingContainer.getBoundingClientRect();
-    console.log(container_box);
     drawTarget.setAttribute("width", container_box.width);
     drawTarget.setAttribute("height", container_box.height);
     drawTarget.setAttribute(
