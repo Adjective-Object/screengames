@@ -169,6 +169,36 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  const toggleFullscreenButton = document.getElementById("toggle-fullscreen");
+  toggleFullscreenButton.addEventListener("click", () => {
+    let doc = window.document;
+    let docEl = doc.documentElement;
+
+    let requestFullScreen =
+      docEl.requestFullscreen ||
+      docEl.mozRequestFullScreen ||
+      docEl.webkitRequestFullScreen ||
+      docEl.msRequestFullscreen;
+    let cancelFullScreen =
+      doc.exitFullscreen ||
+      doc.mozCancelFullScreen ||
+      doc.webkitExitFullscreen ||
+      doc.msExitFullscreen;
+
+    if (
+      !doc.fullscreenElement &&
+      !doc.mozFullScreenElement &&
+      !doc.webkitFullscreenElement &&
+      !doc.msFullscreenElement
+    ) {
+      toggleFullscreenButton.classList.add("fullscreen");
+      requestFullScreen.call(docEl);
+    } else {
+      cancelFullScreen.call(doc);
+      toggleFullscreenButton.classList.remove("fullscreen");
+    }
+  });
+
   const drawingContainer = document.getElementById("drawing-container");
   const resizeDrawingToContainer = resize_event => {
     let container_box = drawingContainer.getBoundingClientRect();

@@ -52,6 +52,15 @@ body {
   outline: none;
 }
 
+.toggle-fullscreen-button:not(.fullscreen) .stop-fullscreen {
+  display:none;
+}
+
+.toggle-fullscreen-button.fullscreen .start-fullscreen {
+  display:none;
+}
+
+
 .tool-button svg {
   height: 24px;
   width: 24px;

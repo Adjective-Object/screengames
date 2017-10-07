@@ -27,6 +27,14 @@ let icon_center_canvas = fs.readFileSync(
   "client/assets/img/ic_center_focus_weak_white_24px.svg",
   "utf-8"
 );
+let icon_start_fullscreen = fs.readFileSync(
+  "client/assets/img/ic_fullscreen_white_24px.svg",
+  "utf-8"
+);
+let icon_stop_fullscreen = fs.readFileSync(
+  "client/assets/img/ic_fullscreen_exit_white_24px.svg",
+  "utf-8"
+);
 
 app.get("/", (req, res) => {
   res.redirect("/r/default");
@@ -37,7 +45,9 @@ app.get("/r/:roomId", (req, res) => {
       icon_pen,
       icon_pan,
       icon_clear_canvas,
-      icon_center_canvas
+      icon_center_canvas,
+      icon_start_fullscreen,
+      icon_stop_fullscreen
     })
   );
 });
