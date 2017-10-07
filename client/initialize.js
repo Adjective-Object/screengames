@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   Array.from(document.querySelectorAll("[tool-id]")).map(button => {
     button.addEventListener("click", e => {
-      const tool_id = e.target.getAttribute("tool-id");
+      const tool_id = e.currentTarget.getAttribute("tool-id");
       if (!tools.hasOwnProperty(tool_id) || current_tool.isActive()) return;
       current_tool = tools[tool_id];
     });
@@ -156,7 +156,20 @@ document.addEventListener("DOMContentLoaded", () => {
   centerCanvasButton.addEventListener("click", e => {
     handleToolEvent({
       type: "center_canvas"
-    })
+    });
   });
 
+  const drawingContainer = document.getElementById("drawing-container");
+  const resizeDrawingToContainer = resize_event => {
+    let container_box = drawingContainer.getBoundingClientRect();
+    console.log(container_box);
+    drawTarget.setAttribute("width", container_box.width);
+    drawTarget.setAttribute("height", container_box.height);
+    drawTarget.setAttribute(
+      "viewBox",
+      `0 0 ${container_box.width} ${container_box.height}`
+    );
+  };
+  resizeDrawingToContainer();
+  window.addEventListener("resize", resizeDrawingToContainer);
 });

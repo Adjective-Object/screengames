@@ -11,16 +11,18 @@
 </head>
 <body>
 <section id="game-container" class="game-container">
+<section id="drawing-container" class="drawing-container">
 <svg id="draw-target"
      class="drawing-canvas"
      width="400"
      height="400"
      viewbox="0 0 400 400"><g id="transform-host"></g></svg>
-<nav>
-  <button id="clear-canvas">Clear Canvas</button>
-  <button id="center-canvas">Center Canvas</button>
-  <button tool-id='pen_tool'>Pen Tool</button>
-  <button tool-id='canvas_panning_tool'>Pan Canvas</button>
+</section>
+<nav class="pictionary-tools">
+  <button class="tool-button" tool-id='pen_tool'><img src="/img/ic_create_white_24px.svg" alt="pen tool icon"/></button>
+  <button class="tool-button" tool-id='canvas_panning_tool'><img src="/img/ic_pan_tool_white_24px.svg" alt="panning tool icon"/></button>
+  <button class="tool-button" id="clear-canvas"><img src="/img/ic_layers_clear_white_24px.svg" alt="clear canvas"/></button>
+  <button class="tool-button" id="center-canvas"><img src="/img/ic_center_focus_weak_white_24px.svg" alt="center canvas"/></button>
 </nav>
 </section>
 </body>
