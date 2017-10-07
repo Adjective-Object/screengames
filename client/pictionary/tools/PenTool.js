@@ -18,6 +18,12 @@ interface Drawing {
     }
     strokeOrder: [string];
 }
+
+interface PointSet {
+  world_space: Point[], // in svg user units
+  screen_space: Point[], // in screen pixels
+}
+
 */
 
 export default class PenTool {
@@ -39,7 +45,7 @@ export default class PenTool {
 
   onTouchStart(points, time) {
     if (this.currentStrokeID !== null) return;
-    let point = points[0];
+    let point = points.world_space[0];
     // TODO color ?
     this.currentStrokeID = guid();
     this.strokeOrder.push(this.currentStrokeID);
@@ -60,7 +66,7 @@ export default class PenTool {
     if (this.currentStrokeID === null) {
       return null;
     }
-    let point = points[0];
+    let point = points.world_space[0];
 
     let updated = false;
     let last_point = this.getLastPointOfStroke(this.currentStrokeID);
@@ -91,10 +97,13 @@ export default class PenTool {
 
   onTouchEnd(points, remaining_points, time) {
     // Bail if not in the middle of recording a new stroke
-    if (this.currentStrokeID === null || remaining_points.length !== 0) {
+    if (
+      this.currentStrokeID === null ||
+      remaining_points.world_space.length !== 0
+    ) {
       return null;
     }
-    let point = points[0];
+    let point = points.world_space[0];
 
     let current_stroke_id = this.currentStrokeID;
     let event = {

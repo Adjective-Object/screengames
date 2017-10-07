@@ -13,14 +13,16 @@ export default class CanvasPanningTool {
     this.trackedPoints = null;
   }
 
-  onTouchStart(points, time) {
+  onTouchStart(pointset, time) {
+    let points = pointset.world_space;
     if (this.trackedPoints === null) {
       this.trackedPoints = points.length > 1 ? points.splice(0, 2) : points;
     }
   }
 
-  onTouchMove(points, time) {
+  onTouchMove(pointset, time) {
     if (this.trackedPoints == null) return null;
+    let points = pointset.world_space;
     // Track up to 2 points
     const new_points = points.length > 1 ? points.splice(0, 2) : points;
 
@@ -52,8 +54,8 @@ export default class CanvasPanningTool {
     }
   }
 
-  onTouchEnd(points, remaining_points, time) {
-    if (remaining_points.length === 0) {
+  onTouchEnd(removed_pointset, remaining_pointset, time) {
+    if (remaining_pointset.world_space.length === 0) {
       this.trackedPoints = null;
     }
   }

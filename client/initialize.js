@@ -94,23 +94,49 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function mouseEventToPointSet(mouse_event) {
+    return {
+      world_space: [transformToCanvasSpace(camera, drawTarget, mouse_event)],
+      screen_space: [{ x: mouse_event.clientX, y: mouse_event.clientY }]
+    };
+  }
+
+  function touchesToPointSet(touches) {
+    let world_space_points = Array.from(touches).map(
+      transformToCanvasSpace.bind(null, camera, drawTarget)
+    );
+    let screen_space_points = Array.from(touches).map(touch => ({
+      x: touch.clientX,
+      y: touch.clientY
+    }));
+    return {
+      world_space: world_space_points,
+      screen_space: screen_space_points
+    };
+  }
+
   // Bind mouse events
   drawTarget.addEventListener("mousedown", e => {
     let time = new Date().getTime();
-    let point = transformToCanvasSpace(camera, drawTarget, e);
-    let tool_event = current_tool.onTouchStart([point], time);
+    let point_set = mouseEventToPointSet(e);
+    let tool_event = current_tool.onTouchStart(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener("mousemove", e => {
     let time = new Date().getTime();
-    let point = transformToCanvasSpace(camera, drawTarget, e);
-    let tool_event = current_tool.onTouchMove([point], time);
+    let point_set = mouseEventToPointSet(e);
+    let tool_event = current_tool.onTouchMove(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener("mouseup", e => {
     let time = new Date().getTime();
-    let point = transformToCanvasSpace(camera, drawTarget, e);
-    let tool_event = current_tool.onTouchEnd([point], [], time);
+    let point_set = mouseEventToPointSet(e);
+    let remaining_point_set = { world_space: [], screen_space: [] };
+    let tool_event = current_tool.onTouchEnd(
+      point_set,
+      remaining_point_set,
+      time
+    );
     handleToolEvent(tool_event);
   });
 
@@ -119,29 +145,25 @@ document.addEventListener("DOMContentLoaded", () => {
     // Prevent double-tap-to-zoom
     e.preventDefault();
     let time = new Date().getTime();
-    let points = Array.from(e.touches).map(
-      transformToCanvasSpace.bind(null, camera, drawTarget)
-    );
-    let tool_event = current_tool.onTouchStart(points, time);
+    let point_set = touchesToPointSet(e.touches);
+    let tool_event = current_tool.onTouchStart(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener("touchmove", e => {
     let time = new Date().getTime();
-    let points = Array.from(e.touches).map(
-      transformToCanvasSpace.bind(null, camera, drawTarget)
-    );
-    let tool_event = current_tool.onTouchMove(points, time);
+    let point_set = touchesToPointSet(e.touches);
+    let tool_event = current_tool.onTouchMove(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener("touchend", e => {
     let time = new Date().getTime();
-    let points = Array.from(e.changedTouches).map(
-      transformToCanvasSpace.bind(null, camera, drawTarget)
+    let changed_point_set = touchesToPointSet(e.changedTouches);
+    let remaining_point_set = touchesToPointSet(e.touches);
+    let tool_event = current_tool.onTouchEnd(
+      changed_point_set,
+      remaining_point_set,
+      time
     );
-    let remaining_points = Array.from(e.touches).map(
-      transformToCanvasSpace.bind(null, camera, drawTarget)
-    );
-    let tool_event = current_tool.onTouchEnd(points, remaining_points, time);
     handleToolEvent(tool_event);
   });
 
