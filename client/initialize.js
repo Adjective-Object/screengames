@@ -151,4 +151,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     socket.emit("event", clear_canvas_event);
   });
+
+  let centerCanvasButton = document.getElementById("center-canvas");
+  centerCanvasButton.addEventListener("click", e => {
+    handleToolEvent({
+      type: "center_canvas"
+    })
+  });
+
 });
