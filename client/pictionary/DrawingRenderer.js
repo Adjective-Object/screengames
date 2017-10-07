@@ -1,12 +1,16 @@
+import { toString as transformToString } from "transformation-matrix";
+
 export default class DrawingRenderer {
-  renderDrawingToSVG(drawing, drawing_client, svg) {
-    svg.innerHTML = "";
+  renderDrawingToSVG(camera, drawing, drawing_client, svg) {
+    let group = svg.querySelector("g");
+    group.setAttribute("transform", transformToString(camera.transform));
+    group.innerHTML = "";
     for (let strokeID of drawing.strokeOrder) {
       // Insert a new line as the last child of the svg
-      svg.appendChild(this.__renderBaseStroke(drawing.strokes[strokeID]));
+      group.appendChild(this.__renderBaseStroke(drawing.strokes[strokeID]));
 
       if (strokeID == drawing_client.currentStrokeID) {
-        svg.appendChild(
+        group.appendChild(
           this.__renderPendingLine(
             drawing.strokes[strokeID],
             drawing_client.pendingSample

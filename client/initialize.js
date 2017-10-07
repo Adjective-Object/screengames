@@ -1,13 +1,15 @@
 import Drawing from "./pictionary/Drawing";
+import Camera from "./pictionary/Camera";
 import PenTool from "./pictionary/tools/PenTool";
 import CanvasPanningTool from "./pictionary/tools/CanvasPanningTool";
 import DrawingRenderer from "./pictionary/DrawingRenderer";
 import SocketEventQueue from "../util/socket/SocketEventQueue";
 import io from "socket.io-client";
+import { inverse as inverseMatrix, applyToPoint } from "transformation-matrix";
 
 // Convert from DOM space to canvas space based on the current SVG bounding
 // rectangle and the viewbox of the rtarget
-const transformToCanvasSpace = (draw_target, mouse_event) => {
+const transformToCanvasSpace = (camera, draw_target, mouse_event) => {
   let boundingRect = draw_target.getBoundingClientRect();
   // Get location of the mouse event in SVG space
   let viewbox_x =
@@ -20,14 +22,19 @@ const transformToCanvasSpace = (draw_target, mouse_event) => {
       boundingRect.height *
       draw_target.viewBox.baseVal.height +
     draw_target.viewBox.baseVal.y;
-  return {
+  return applyToPoint(inverseMatrix(camera.transform), {
     x: viewbox_x,
     y: viewbox_y
-  };
+  });
 };
 
 document.addEventListener("DOMContentLoaded", () => {
   let drawing = new Drawing();
+  let camera = new Camera();
+  let renderer = new DrawingRenderer();
+  let drawTarget = document.getElementById("draw-target");
+  let eventQueue = new SocketEventQueue();
+
   // The pen tool is used in rendering, so keep it in scope
   let pen_tool = new PenTool();
   let tools = {
@@ -35,10 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas_panning_tool: new CanvasPanningTool()
   };
   let current_tool = tools["pen_tool"];
-
-  let renderer = new DrawingRenderer();
-  let drawTarget = document.getElementById("draw-target");
-  let eventQueue = new SocketEventQueue();
 
   let socket = io();
   socket.on("connect", () => {
@@ -55,37 +58,46 @@ document.addEventListener("DOMContentLoaded", () => {
       eventQueue.clearEvents();
       for (let event of events) {
         if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
-          renderer.renderDrawingToSVG(drawing, pen_tool, drawTarget);
+          renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
         }
       }
     }
   });
 
   // Common handlers for handling a drawing
-  function handleToolEvent(drawing_event) {
-    if (!drawing_event || !drawing.canIngestEvent(drawing_event)) return;
-    if (drawing.ingestEvent(drawing_event)) {
-      renderer.renderDrawingToSVG(drawing, pen_tool, drawTarget);
+  function handleToolEvent(tool_event) {
+    if (!tool_event) return;
+    let should_update = false;
+    if (drawing.canIngestEvent(tool_event)) {
+      drawing.ingestEvent(tool_event);
+      socket.emit("event", tool_event);
+      should_update = true;
     }
-    socket.emit("event", drawing_event);
+    if (camera.canIngestEvent(tool_event)) {
+      camera.ingestEvent(tool_event);
+      should_update = true;
+    }
+    if (should_update) {
+      renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
+    }
   }
 
   // Bind mouse events
   drawTarget.addEventListener("mousedown", e => {
     let time = new Date().getTime();
-    let point = transformToCanvasSpace(drawTarget, e);
+    let point = transformToCanvasSpace(camera, drawTarget, e);
     let tool_event = current_tool.onTouchStart([point], time);
     handleToolEvent(tool_event);
   });
   document.addEventListener("mousemove", e => {
     let time = new Date().getTime();
-    let point = transformToCanvasSpace(drawTarget, e);
+    let point = transformToCanvasSpace(camera, drawTarget, e);
     let tool_event = current_tool.onTouchMove([point], time);
     handleToolEvent(tool_event);
   });
   document.addEventListener("mouseup", e => {
     let time = new Date().getTime();
-    let point = transformToCanvasSpace(drawTarget, e);
+    let point = transformToCanvasSpace(camera, drawTarget, e);
     let tool_event = current_tool.onTouchEnd([point], time);
     handleToolEvent(tool_event);
   });
@@ -96,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     let time = new Date().getTime();
     let points = Array.from(e.touches).map(
-      transformToCanvasSpace.bind(null, drawTarget)
+      transformToCanvasSpace.bind(null, camera, drawTarget)
     );
     let tool_event = current_tool.onTouchStart(points, time);
     handleToolEvent(tool_event);
@@ -104,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("touchmove", e => {
     let time = new Date().getTime();
     let points = Array.from(e.touches).map(
-      transformToCanvasSpace.bind(null, drawTarget)
+      transformToCanvasSpace.bind(null, camera, drawTarget)
     );
     let tool_event = current_tool.onTouchMove(points, time);
     handleToolEvent(tool_event);
@@ -112,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("touchend", e => {
     let time = new Date().getTime();
     let points = Array.from(e.changedTouches).map(
-      transformToCanvasSpace.bind(null, drawTarget)
+      transformToCanvasSpace.bind(null, camera, drawTarget)
     );
     let tool_event = current_tool.onTouchEnd(points, time);
     handleToolEvent(tool_event);
@@ -120,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   Array.from(document.querySelectorAll("[tool-id]")).map(button => {
     button.addEventListener("click", e => {
-      console.log("changing tool to", button);
       const tool_id = e.target.getAttribute("tool-id");
       if (!tools.hasOwnProperty(tool_id) || current_tool.isActive()) return;
       current_tool = tools[tool_id];
@@ -133,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       type: "clear_canvas"
     };
     if (drawing.ingestEvent(clear_canvas_event)) {
-      renderer.renderDrawingToSVG(drawing, pen_tool, drawTarget);
+      renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
     }
     socket.emit("event", clear_canvas_event);
   });
