@@ -14,7 +14,9 @@ export default class CanvasPanningTool {
   }
 
   onTouchStart(points, time) {
-    this.trackedPoints = points.length > 1 ? points.splice(0, 2) : points;
+    if (this.trackedPoints === null) {
+      this.trackedPoints = points.length > 1 ? points.splice(0, 2) : points;
+    }
   }
 
   onTouchMove(points, time) {
@@ -47,6 +49,12 @@ export default class CanvasPanningTool {
         new_points
       );
       return transform_event;
+    }
+  }
+
+  onTouchEnd(points, remaining_points, time) {
+    if (remaining_points.length === 0) {
+      this.trackedPoints = null;
     }
   }
 
@@ -86,10 +94,6 @@ export default class CanvasPanningTool {
       type: "adjust_transform",
       transform: transform_matrix
     };
-  }
-
-  onTouchEnd(points, time) {
-    this.trackedPoints = null;
   }
 
   isActive() {

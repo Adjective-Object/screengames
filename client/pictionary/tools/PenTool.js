@@ -38,6 +38,7 @@ export default class PenTool {
   }
 
   onTouchStart(points, time) {
+    if (this.currentStrokeID !== null) return;
     let point = points[0];
     // TODO color ?
     this.currentStrokeID = guid();
@@ -88,9 +89,9 @@ export default class PenTool {
     return null;
   }
 
-  onTouchEnd(points, time) {
+  onTouchEnd(points, remaining_points, time) {
     // Bail if not in the middle of recording a new stroke
-    if (this.currentStrokeID === null) {
+    if (this.currentStrokeID === null || remaining_points.length !== 0) {
       return null;
     }
     let point = points[0];

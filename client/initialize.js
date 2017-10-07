@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("mouseup", e => {
     let time = new Date().getTime();
     let point = transformToCanvasSpace(camera, drawTarget, e);
-    let tool_event = current_tool.onTouchEnd([point], time);
+    let tool_event = current_tool.onTouchEnd([point], [], time);
     handleToolEvent(tool_event);
   });
 
@@ -126,7 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let points = Array.from(e.changedTouches).map(
       transformToCanvasSpace.bind(null, camera, drawTarget)
     );
-    let tool_event = current_tool.onTouchEnd(points, time);
+    let remaining_points = Array.from(e.touches).map(
+      transformToCanvasSpace.bind(null, camera, drawTarget)
+    );
+    let tool_event = current_tool.onTouchEnd(points, remaining_points, time);
     handleToolEvent(tool_event);
   });
 
