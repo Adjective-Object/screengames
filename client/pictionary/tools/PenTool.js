@@ -29,9 +29,9 @@ interface PointSet {
 export default class PenTool {
   constructor(props) {
     // Config
-    this.distanceThreshold = 10;
-    this.timeDistanceThreshold = 2;
-    this.timeDifferenceThreshold = 400;
+    this.distanceThreshold = 2;
+    this.timeDistanceThreshold = 0.5;
+    this.timeDifferenceThreshold = 100;
 
     // Long-lived state
     this.strokes = {};
@@ -41,11 +41,13 @@ export default class PenTool {
     this.currentStrokeID = null;
     this.lastSampleTime = null;
     this.pendingSample = null;
+    this.lastScreenSpacePoint = null;
   }
 
   onTouchStart(points, time) {
     if (this.currentStrokeID !== null) return;
     let point = points.world_space[0];
+    this.lastScreenSpacePoint = points.screen_space[0];
     // TODO color ?
     this.currentStrokeID = guid();
     this.strokeOrder.push(this.currentStrokeID);
@@ -67,10 +69,12 @@ export default class PenTool {
       return null;
     }
     let point = points.world_space[0];
+    let screenspace_point = points.screen_space[0];
 
     let updated = false;
     let last_point = this.getLastPointOfStroke(this.currentStrokeID);
-    let point_distance = distance(point, last_point);
+    let point_distance = distance(screenspace_point, this.lastScreenSpacePoint);
+    this.lastScreenSpacePoint = screenspace_point;
     let timeDifference = time - this.lastSampleTime;
     if (point_distance > this.distanceThreshold) {
       this.__addPointToCurrentStroke(point, time);
