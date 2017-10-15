@@ -9,13 +9,14 @@
     "start": "brunch watch --server",
     "build": "brunch build --production",
     "format": "prettier --write 'client/**/*.js' 'server/**/*.js' 'util/**/*.js' 'client/**/*.css' 'server/**/*.css' 'util/**/*.css'",
-    "dev-server": "nodemon --watch server --exec babel-node server/run-app.js --presets latest"
+    "dev-server": "nodemon --watch server --exec babel-node server/run-app.js"
   },
   "dependencies": {
     "bunyan": "^1.8.12",
     "express": "^4.15.4",
     "handlebars": "^4.0.10",
     "lodash": "^4.17.4",
+    "mz": "^2.7.0",
     "socket.io": "^2.0.3",
     "socket.io-client": "^2.0.3",
     "transformation-matrix": "^1.5.0"
@@ -25,6 +26,7 @@
     "babel-brunch": "~6.0",
     "babel-cli": "^6.26.0",
     "babel-preset-latest": "^6",
+    "babel-preset-stage-3": "^6.24.1",
     "brunch": "^2",
     "clean-css-brunch": "^2",
     "jest": "^21.1.0",
