@@ -1,5 +1,5 @@
-import Room from "./Room";
-import SocketEventQueue from "../../util/socket/SocketEventQueue";
+import Room from './Room';
+import SocketEventQueue from '../../util/socket/SocketEventQueue';
 
 /*
 
@@ -20,14 +20,14 @@ export default class RoomRouter {
   }
 
   addUser(socket) {
-    console.log("add user", socket.id);
+    console.log('add user', socket.id);
     let incoming_event_queue = new SocketEventQueue();
 
     let new_user = {
       id: socket.id,
       seq: 1,
       socket: socket,
-      incomingEventQueue: incoming_event_queue
+      incomingEventQueue: incoming_event_queue,
     };
 
     this.users[new_user.id] = new_user;
@@ -41,7 +41,7 @@ export default class RoomRouter {
    */
   removeUser(socket) {
     let user_id = socket.id;
-    console.log("remove user", user_id);
+    console.log('remove user', user_id);
     let room = this.getRoomForUser(user_id);
     if (room) {
       room.removeParticipant(user_id);

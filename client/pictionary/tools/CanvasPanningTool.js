@@ -1,12 +1,12 @@
-import log from "../../../util/log";
-import distance from "../../util/distance";
+import log from '../../../util/log';
+import distance from '../../util/distance';
 import {
   transform,
   translate,
   scale,
   inverse,
-  applyToPoint
-} from "transformation-matrix";
+  applyToPoint,
+} from 'transformation-matrix';
 
 export default class CanvasPanningTool {
   constructor() {
@@ -38,7 +38,7 @@ export default class CanvasPanningTool {
       let transform_event = this.__pan(this.trackedPoints[0], new_points[0]);
       this.trackedPoints = this.__applyEventToPoints(
         transform_event,
-        new_points
+        new_points,
       );
       return transform_event;
     }
@@ -48,7 +48,7 @@ export default class CanvasPanningTool {
       let transform_event = this.__panzoom(this.trackedPoints, new_points);
       this.trackedPoints = this.__applyEventToPoints(
         transform_event,
-        new_points
+        new_points,
       );
       return transform_event;
     }
@@ -64,19 +64,19 @@ export default class CanvasPanningTool {
     let translation_x = old_point.x - new_point.x;
     let translation_y = old_point.y - new_point.y;
     return {
-      type: "adjust_transform",
-      transform: translate(-translation_x, -translation_y)
+      type: 'adjust_transform',
+      transform: translate(-translation_x, -translation_y),
     };
   }
 
   __panzoom(old_points, new_points) {
     let old_midpoint = {
       x: (old_points[0].x + old_points[1].x) / 2,
-      y: (old_points[0].y + old_points[1].y) / 2
+      y: (old_points[0].y + old_points[1].y) / 2,
     };
     let new_midpoint = {
       x: (new_points[0].x + new_points[1].x) / 2,
-      y: (new_points[0].y + new_points[1].y) / 2
+      y: (new_points[0].y + new_points[1].y) / 2,
     };
     let translation_x = old_midpoint.x - new_midpoint.x;
     let translation_y = old_midpoint.y - new_midpoint.y;
@@ -89,12 +89,12 @@ export default class CanvasPanningTool {
       translate(new_midpoint.x, new_midpoint.y),
       scale(scale_ratio, scale_ratio),
       translate(-new_midpoint.x, -new_midpoint.y),
-      translate(-translation_x, -translation_y)
+      translate(-translation_x, -translation_y),
     );
 
     return {
-      type: "adjust_transform",
-      transform: transform_matrix
+      type: 'adjust_transform',
+      transform: transform_matrix,
     };
   }
 
@@ -104,7 +104,7 @@ export default class CanvasPanningTool {
 
   __applyEventToPoints(transform_event, points) {
     return points.map(point =>
-      applyToPoint(inverse(transform_event.transform), point)
+      applyToPoint(inverse(transform_event.transform), point),
     );
   }
 }

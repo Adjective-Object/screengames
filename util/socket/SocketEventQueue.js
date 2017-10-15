@@ -1,4 +1,4 @@
-import _ from "lodash";
+import _ from 'lodash';
 /*
 type ClientEventQueue {
     queuedEvents: {},
@@ -48,7 +48,7 @@ export default class SocketEventQueue {
       this.pendingSeq.splice(pending_seq_queue_index, 1);
     } else if (event.seq <= this.maxSeq) {
       throw new Error(
-        "Ingested non-pending event with seq ${event.seq}. Duplicate event?"
+        'Ingested non-pending event with seq ${event.seq}. Duplicate event?',
       );
     }
 
@@ -84,11 +84,11 @@ export default class SocketEventQueue {
     this.queuedEvents.splice(i, 0, event);
     this.queuedSeq.push(event.seq);
     let new_pending = _.range(Math.max(this.maxSeq, 1), event.seq).filter(
-      i => this.queuedSeq.indexOf(i) === -1
+      i => this.queuedSeq.indexOf(i) === -1,
     );
     if (this.queuedEvents.length % 100 == 0) {
       console.warn(
-        `event queue reached ${this.queuedEvents.length} pending events`
+        `event queue reached ${this.queuedEvents.length} pending events`,
       );
     }
     this.pendingSeq = this.pendingSeq.concat(new_pending);

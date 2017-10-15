@@ -1,11 +1,11 @@
-import Drawing from "./pictionary/Drawing";
-import Camera from "./pictionary/Camera";
-import PenTool from "./pictionary/tools/PenTool";
-import CanvasPanningTool from "./pictionary/tools/CanvasPanningTool";
-import DrawingRenderer from "./pictionary/DrawingRenderer";
-import SocketEventQueue from "../util/socket/SocketEventQueue";
-import io from "socket.io-client";
-import { inverse as inverseMatrix, applyToPoint } from "transformation-matrix";
+import Drawing from './pictionary/Drawing';
+import Camera from './pictionary/Camera';
+import PenTool from './pictionary/tools/PenTool';
+import CanvasPanningTool from './pictionary/tools/CanvasPanningTool';
+import DrawingRenderer from './pictionary/DrawingRenderer';
+import SocketEventQueue from '../util/socket/SocketEventQueue';
+import io from 'socket.io-client';
+import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
 
 // Convert from DOM space to canvas space based on the current SVG bounding
 // rectangle and the viewbox of the rtarget
@@ -24,43 +24,43 @@ const transformToCanvasSpace = (camera, draw_target, mouse_event) => {
     draw_target.viewBox.baseVal.y;
   return applyToPoint(inverseMatrix(camera.transform), {
     x: viewbox_x,
-    y: viewbox_y
+    y: viewbox_y,
   });
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
   let camera = new Camera();
   let renderer = new DrawingRenderer();
-  let drawTarget = document.getElementById("draw-target");
+  let drawTarget = document.getElementById('draw-target');
   let eventQueue = new SocketEventQueue();
 
   // The pen tool is used in rendering, so keep it in scope
   let pen_tool = new PenTool();
   let tools = {
     pen_tool: pen_tool,
-    canvas_panning_tool: new CanvasPanningTool()
+    canvas_panning_tool: new CanvasPanningTool(),
   };
-  let current_tool = tools["pen_tool"];
+  let current_tool = tools['pen_tool'];
   const setActiveTool = tool_elem => {
     // Set the current tool from the tool's id
-    const tool_id = tool_elem.getAttribute("tool-id");
+    const tool_id = tool_elem.getAttribute('tool-id');
     if (!tools.hasOwnProperty(tool_id) || current_tool.isActive()) return;
     current_tool = tools[tool_id];
     // Set the '.selected' class only on the active tool button
-    Array.from(document.querySelectorAll("[tool-id]")).map(element => {
-      element.classList.remove("selected");
+    Array.from(document.querySelectorAll('[tool-id]')).map(element => {
+      element.classList.remove('selected');
     });
-    tool_elem.classList.add("selected");
+    tool_elem.classList.add('selected');
   };
   setActiveTool(document.querySelector('[tool-id="pen_tool"]'));
 
   let socket = io();
-  socket.on("connect", () => {
-    socket.emit("join_room", "default");
+  socket.on('connect', () => {
+    socket.emit('join_room', 'default');
   });
 
-  socket.on("event", event => {
+  socket.on('event', event => {
     // Queue events
     eventQueue.ingestEvent(event);
     let events = eventQueue.getEvents();
@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let should_update = false;
     if (drawing.canIngestEvent(tool_event)) {
       drawing.ingestEvent(tool_event);
-      socket.emit("event", tool_event);
+      socket.emit('event', tool_event);
       should_update = true;
     }
     if (camera.canIngestEvent(tool_event)) {
@@ -97,51 +97,51 @@ document.addEventListener("DOMContentLoaded", () => {
   function mouseEventToPointSet(mouse_event) {
     return {
       world_space: [transformToCanvasSpace(camera, drawTarget, mouse_event)],
-      screen_space: [{ x: mouse_event.clientX, y: mouse_event.clientY }]
+      screen_space: [{ x: mouse_event.clientX, y: mouse_event.clientY }],
     };
   }
 
   function touchesToPointSet(touches) {
     let world_space_points = Array.from(touches).map(
-      transformToCanvasSpace.bind(null, camera, drawTarget)
+      transformToCanvasSpace.bind(null, camera, drawTarget),
     );
     let screen_space_points = Array.from(touches).map(touch => ({
       x: touch.clientX,
-      y: touch.clientY
+      y: touch.clientY,
     }));
     return {
       world_space: world_space_points,
-      screen_space: screen_space_points
+      screen_space: screen_space_points,
     };
   }
 
   // Bind mouse events
-  drawTarget.addEventListener("mousedown", e => {
+  drawTarget.addEventListener('mousedown', e => {
     let time = new Date().getTime();
     let point_set = mouseEventToPointSet(e);
     let tool_event = current_tool.onTouchStart(point_set, time);
     handleToolEvent(tool_event);
   });
-  document.addEventListener("mousemove", e => {
+  document.addEventListener('mousemove', e => {
     let time = new Date().getTime();
     let point_set = mouseEventToPointSet(e);
     let tool_event = current_tool.onTouchMove(point_set, time);
     handleToolEvent(tool_event);
   });
-  document.addEventListener("mouseup", e => {
+  document.addEventListener('mouseup', e => {
     let time = new Date().getTime();
     let point_set = mouseEventToPointSet(e);
     let remaining_point_set = { world_space: [], screen_space: [] };
     let tool_event = current_tool.onTouchEnd(
       point_set,
       remaining_point_set,
-      time
+      time,
     );
     handleToolEvent(tool_event);
   });
 
   // Bind equivalent handlers for touch events
-  drawTarget.addEventListener("touchstart", e => {
+  drawTarget.addEventListener('touchstart', e => {
     // Prevent double-tap-to-zoom
     e.preventDefault();
     let time = new Date().getTime();
@@ -149,50 +149,50 @@ document.addEventListener("DOMContentLoaded", () => {
     let tool_event = current_tool.onTouchStart(point_set, time);
     handleToolEvent(tool_event);
   });
-  document.addEventListener("touchmove", e => {
+  document.addEventListener('touchmove', e => {
     let time = new Date().getTime();
     let point_set = touchesToPointSet(e.touches);
     let tool_event = current_tool.onTouchMove(point_set, time);
     handleToolEvent(tool_event);
   });
-  document.addEventListener("touchend", e => {
+  document.addEventListener('touchend', e => {
     let time = new Date().getTime();
     let changed_point_set = touchesToPointSet(e.changedTouches);
     let remaining_point_set = touchesToPointSet(e.touches);
     let tool_event = current_tool.onTouchEnd(
       changed_point_set,
       remaining_point_set,
-      time
+      time,
     );
     handleToolEvent(tool_event);
   });
 
-  Array.from(document.querySelectorAll("[tool-id]")).map(button => {
-    button.addEventListener("click", e => {
+  Array.from(document.querySelectorAll('[tool-id]')).map(button => {
+    button.addEventListener('click', e => {
       setActiveTool(e.currentTarget);
     });
   });
 
-  let clearCanvasButton = document.getElementById("clear-canvas");
-  clearCanvasButton.addEventListener("click", e => {
+  let clearCanvasButton = document.getElementById('clear-canvas');
+  clearCanvasButton.addEventListener('click', e => {
     let clear_canvas_event = {
-      type: "clear_canvas"
+      type: 'clear_canvas',
     };
     if (drawing.ingestEvent(clear_canvas_event)) {
       renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
     }
-    socket.emit("event", clear_canvas_event);
+    socket.emit('event', clear_canvas_event);
   });
 
-  let centerCanvasButton = document.getElementById("center-canvas");
-  centerCanvasButton.addEventListener("click", e => {
+  let centerCanvasButton = document.getElementById('center-canvas');
+  centerCanvasButton.addEventListener('click', e => {
     handleToolEvent({
-      type: "center_canvas"
+      type: 'center_canvas',
     });
   });
 
-  const toggleFullscreenButton = document.getElementById("toggle-fullscreen");
-  toggleFullscreenButton.addEventListener("click", () => {
+  const toggleFullscreenButton = document.getElementById('toggle-fullscreen');
+  toggleFullscreenButton.addEventListener('click', () => {
     let doc = window.document;
     let docEl = doc.documentElement;
 
@@ -213,24 +213,24 @@ document.addEventListener("DOMContentLoaded", () => {
       !doc.webkitFullscreenElement &&
       !doc.msFullscreenElement
     ) {
-      toggleFullscreenButton.classList.add("fullscreen");
+      toggleFullscreenButton.classList.add('fullscreen');
       requestFullScreen.call(docEl);
     } else {
       cancelFullScreen.call(doc);
-      toggleFullscreenButton.classList.remove("fullscreen");
+      toggleFullscreenButton.classList.remove('fullscreen');
     }
   });
 
-  const drawingContainer = document.getElementById("drawing-container");
+  const drawingContainer = document.getElementById('drawing-container');
   const resizeDrawingToContainer = resize_event => {
     let container_box = drawingContainer.getBoundingClientRect();
-    drawTarget.setAttribute("width", container_box.width);
-    drawTarget.setAttribute("height", container_box.height);
+    drawTarget.setAttribute('width', container_box.width);
+    drawTarget.setAttribute('height', container_box.height);
     drawTarget.setAttribute(
-      "viewBox",
-      `0 0 ${container_box.width} ${container_box.height}`
+      'viewBox',
+      `0 0 ${container_box.width} ${container_box.height}`,
     );
   };
   resizeDrawingToContainer();
-  window.addEventListener("resize", resizeDrawingToContainer);
+  window.addEventListener('resize', resizeDrawingToContainer);
 });

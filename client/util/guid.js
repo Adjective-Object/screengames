@@ -7,13 +7,13 @@ export default function guid() {
   return (
     s4() +
     s4() +
-    "-" +
+    '-' +
     s4() +
-    "-" +
+    '-' +
     s4() +
-    "-" +
+    '-' +
     s4() +
-    "-" +
+    '-' +
     s4() +
     s4() +
     s4()

@@ -6,7 +6,7 @@ html {
 }
 
 body {
-  background-color: #EEEEEE;
+  background-color: #eeeeee;
 }
 
 *,
@@ -53,13 +53,12 @@ body {
 }
 
 .toggle-fullscreen-button:not(.fullscreen) .stop-fullscreen {
-  display:none;
+  display: none;
 }
 
 .toggle-fullscreen-button.fullscreen .start-fullscreen {
-  display:none;
+  display: none;
 }
-
 
 .tool-button svg {
   height: 24px;
@@ -68,9 +67,9 @@ body {
 }
 
 .tool-button:active svg {
-  fill: rgba(255,255,255,0.5);
+  fill: rgba(255, 255, 255, 0.5);
 }
 
 .tool-button.selected svg {
-  fill: #3498DB;
+  fill: #3498db;
 }

@@ -1,4 +1,4 @@
-import log from "../../util/log";
+import log from '../../util/log';
 /*
 interface Point {
     x: float,
@@ -61,7 +61,7 @@ export default class Drawing {
       this.strokes[stroke_id].points.push(point);
     } else {
       this.strokes[stroke_id] = {
-        points: [point]
+        points: [point],
       };
       this.strokeOrder.push(stroke_id);
     }
@@ -69,30 +69,30 @@ export default class Drawing {
 
   ingestEvent(event) {
     switch (event.type) {
-      case "initialize":
+      case 'initialize':
         if (!this.isEmpty()) {
           log.warn(
-            "Initializing non-empty canvas",
+            'Initializing non-empty canvas',
             this.strokes,
-            this.strokeOrder
+            this.strokeOrder,
           );
         }
         this.strokes = event.initial_state.strokes;
         this.strokeOrder = event.initial_state.strokeOrder;
         return true;
-      case "append_stroke":
+      case 'append_stroke':
         if (!this.strokes.hasOwnProperty(event.stroke_id)) {
-          log.warn("got append_stroke for unknown stroke " + event.stroke_id);
+          log.warn('got append_stroke for unknown stroke ' + event.stroke_id);
         }
         this.__addPointToStroke(event.stroke_id, event.point);
         return true;
-      case "add_stroke":
+      case 'add_stroke':
         if (this.strokes.hasOwnProperty(event.stroke_id)) {
-          log.warn("got add_stroke for existing stroke " + event.stroke_id);
+          log.warn('got add_stroke for existing stroke ' + event.stroke_id);
         }
         this.__addPointToStroke(event.stroke_id, event.point);
         return true;
-      case "clear_stroke":
+      case 'clear_stroke':
         if (!this.strokes.hasOwnProperty(event.stroke_id)) {
           log.warn(`got clear_stroke for unknown stroke_id ${event.stroke_id}`);
           return false;
@@ -100,7 +100,7 @@ export default class Drawing {
         delete this.strokes[event.stroke_id];
         this.strokeOrder.splice(this.strokeOrder.indexOf(event.stroke_id), 1);
         return true;
-      case "clear_canvas":
+      case 'clear_canvas':
         let needs_render = !this.isEmpty();
         this.strokes = {};
         this.strokeOrder = [];
@@ -112,11 +112,11 @@ export default class Drawing {
 
   canIngestEvent(event) {
     const allowed_events = [
-      "add_stroke",
-      "append_stroke",
-      "initialize",
-      "clear_stroke",
-      "clear_canvas"
+      'add_stroke',
+      'append_stroke',
+      'initialize',
+      'clear_stroke',
+      'clear_canvas',
     ];
     return allowed_events.indexOf(event.type) !== -1;
   }

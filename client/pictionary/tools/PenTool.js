@@ -1,5 +1,5 @@
-import guid from "../../util/guid";
-import distance from "../../util/distance";
+import guid from '../../util/guid';
+import distance from '../../util/distance';
 
 /*
 interface Point {
@@ -52,14 +52,14 @@ export default class PenTool {
     this.currentStrokeID = guid();
     this.strokeOrder.push(this.currentStrokeID);
     this.strokes[this.currentStrokeID] = {
-      points: [point]
+      points: [point],
     };
     this.pendingSample = point;
     this.lastSampleTime = time;
     return {
-      type: "add_stroke",
+      type: 'add_stroke',
       stroke_id: this.currentStrokeID,
-      point: point
+      point: point,
     };
   }
 
@@ -90,9 +90,9 @@ export default class PenTool {
 
     if (updated) {
       return {
-        type: "append_stroke",
+        type: 'append_stroke',
         stroke_id: this.currentStrokeID,
-        point: point
+        point: point,
       };
     }
 
@@ -111,9 +111,9 @@ export default class PenTool {
 
     let current_stroke_id = this.currentStrokeID;
     let event = {
-      type: "append_stroke",
+      type: 'append_stroke',
       stroke_id: current_stroke_id,
-      point: this.pendingSample
+      point: this.pendingSample,
     };
     this.__addPointToCurrentStroke(this.pendingSample, time);
     this.currentStrokeID = null;

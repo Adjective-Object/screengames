@@ -1,4 +1,4 @@
-import { transform, identity } from "transformation-matrix";
+import { transform, identity } from 'transformation-matrix';
 export default class Camera {
   constructor() {
     this.transform = identity();
@@ -6,10 +6,10 @@ export default class Camera {
 
   ingestEvent(event) {
     switch (event.type) {
-      case "adjust_transform":
+      case 'adjust_transform':
         this.transform = transform(this.transform, event.transform);
         return true;
-      case "center_canvas":
+      case 'center_canvas':
         this.transform = identity();
         return true;
       default:
@@ -18,7 +18,7 @@ export default class Camera {
   }
 
   canIngestEvent(event) {
-    const allowed_events = ["adjust_transform", "center_canvas"];
+    const allowed_events = ['adjust_transform', 'center_canvas'];
     return allowed_events.indexOf(event.type) !== -1;
   }
 }

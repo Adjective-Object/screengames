@@ -1,5 +1,5 @@
-import Pictionary from "../games/Pictionary";
-import { mapValues } from "lodash";
+import Pictionary from '../games/Pictionary';
+import { mapValues } from 'lodash';
 /*
 type Participant {
     socket: io.Socket,
@@ -32,23 +32,23 @@ class Room {
   addParticipant(user) {
     this.participants[user.id] = {
       user: user,
-      userData: {}
+      userData: {},
     };
 
     // Send initial information about other users to clients as they join
-    user.socket.emit("event", {
+    user.socket.emit('event', {
       seq: user.seq++,
-      type: "join_request_success",
+      type: 'join_request_success',
       participant_user_data: mapValues(
         this.participants,
-        participant => participant.userData
-      )
+        participant => participant.userData,
+      ),
     });
 
-    user.socket.emit("event", {
+    user.socket.emit('event', {
       seq: user.seq++,
-      type: "initialize",
-      initial_state: this.currentGame.getState()
+      type: 'initialize',
+      initial_state: this.currentGame.getState(),
     });
 
     this.updateUserData(user.id, {});
@@ -56,8 +56,8 @@ class Room {
 
   removeParticipant(user_id) {
     this.broadcast({
-      type: "remove_user",
-      user_id: user_id
+      type: 'remove_user',
+      user_id: user_id,
     });
     delete this.participants[user_id];
   }
@@ -71,9 +71,9 @@ class Room {
     participant.userData = user_data;
     // Broadcast the change to the members of the room
     this.broadcast({
-      type: "update_user",
+      type: 'update_user',
       user_id: user_id,
-      userData: participant.userData
+      userData: participant.userData,
     });
   }
 
@@ -86,13 +86,13 @@ class Room {
       }
       let participant = this.participants[participant_id];
       participant.user.socket.emit(
-        "event",
+        'event',
         Object.assign(
           {
-            seq: participant.user.seq++
+            seq: participant.user.seq++,
           },
-          message
-        )
+          message,
+        ),
       );
     });
   }

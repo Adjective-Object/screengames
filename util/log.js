@@ -1,6 +1,6 @@
-import bunyan from "bunyan";
+import bunyan from 'bunyan';
 
 // TODO
-const log = bunyan.createLogger({ name: "screengames" });
+const log = bunyan.createLogger({ name: 'screengames' });
 
 export default log;

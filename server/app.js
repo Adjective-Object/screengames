@@ -1,6 +1,6 @@
-import http from "http";
-import io from "./socket/socket-events";
-import app from "./express/routing";
+import http from 'http';
+import io from './socket/socket-events';
+import app from './express/routing';
 
 /**
  * Shared entrypoint for the socketio server and express app.

@@ -8,7 +8,7 @@
   "scripts": {
     "start": "brunch watch --server",
     "build": "brunch build --production",
-    "format": "prettier --write 'client/**/*.js' 'server/**/*.js' 'util/**/*.js'",
+    "format": "prettier --write 'client/**/*.js' 'server/**/*.js' 'util/**/*.js' 'client/**/*.css' 'server/**/*.css' 'util/**/*.css'",
     "dev-server": "nodemon --watch server --exec babel-node server/run-app.js --presets latest"
   },
   "dependencies": {

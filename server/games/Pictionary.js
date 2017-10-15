@@ -1,5 +1,5 @@
-import Game from "./Game";
-import Drawing from "../../client/pictionary/Drawing";
+import Game from './Game';
+import Drawing from '../../client/pictionary/Drawing';
 
 export default class Pictionary extends Game {
   constructor(room) {
@@ -9,9 +9,9 @@ export default class Pictionary extends Game {
 
   getState() {
     return {
-      game: "Pictionary",
+      game: 'Pictionary',
       strokes: this.drawing.strokes,
-      strokeOrder: this.drawing.strokeOrder
+      strokeOrder: this.drawing.strokeOrder,
     };
   }
 

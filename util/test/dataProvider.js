@@ -1,4 +1,4 @@
-import { cloneDeep } from "lodash";
+import { cloneDeep } from 'lodash';
 const dataProvider = dataset => test_function => {
   for (let test_name in dataset) {
     let test_data = cloneDeep(dataset[test_name]);
