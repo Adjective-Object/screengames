@@ -1,5 +1,7 @@
 import Pictionary from '../games/Pictionary';
-import { mapValues } from 'lodash';
+import { mapValues, every } from 'lodash';
+import log from '../../util/log';
+
 /*
 type Participant {
     socket: io.Socket,
@@ -22,7 +24,7 @@ class Room {
    */
   processClientEvent(user_id, event) {
     if (event.type === undefined) {
-      console.error(`got typeless event ${event}`);
+      log.warn(`got typeless event ${event}`);
       return;
     }
 
@@ -77,7 +79,7 @@ class Room {
   isEmpty() {
     return (
       Object.keys(this.participants).length === 0 ||
-      this.participants.all(participant => !participant.connected)
+      every(this.participants, participant => !participant.user.connected)
     );
   }
 

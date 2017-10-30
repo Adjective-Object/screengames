@@ -1,5 +1,5 @@
 export const NO_EXCEPTION = 'NO_THROWN_EXCEPTION';
-export const captureException = (fn) => {
+export const captureException = fn => {
   try {
     fn();
   } catch (e) {
