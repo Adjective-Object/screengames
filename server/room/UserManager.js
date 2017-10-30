@@ -12,7 +12,7 @@ export type User = {
   connected: boolean,
 };
 
-export default class RoomRouter {
+export default class UserManager {
   rooms: { [string]: Room };
   users: { [string]: User };
   userRoomMap: { [string]: string };
@@ -23,13 +23,32 @@ export default class RoomRouter {
     this.userRoomMap = {};
   }
 
-  addOrRecoverUser(user_id: string, socket: io.Socket) {
+  /**
+   * Return true if a given user exists in the user database and the user is
+   * marked as connected
+   */
+  isUserConnected(user_id: string): boolean {
+    return this.users.hasOwnProperty(user_id) && this.users[user_id].connected;
+  }
+
+  /**
+   * Given a user id and a socket, either recover an existing user session or
+   * create a new session for the user.
+   *
+   * return false if a socket for the given user is already connected.
+   */
+  addOrRecoverUser(user_id: string, socket: io.Socket): boolean {
+    // If the user is already connected, don't do that actually
+    if (this.isUserConnected(user_id)) {
+      throw {
+        type: 'duplicate_connection',
+        socket_id: socket.id,
+        user_id: user_id,
+        message: `received duplicate connection for user ${user_id}`,
+      };
+    }
     if (this.users.hasOwnProperty(user_id)) {
       // User already tracked. Try to recover session
-      if (this.users[user_id].connected) {
-        // Session already connected. Do nothing
-        return false;
-      }
       this.users[user_id].socket = socket;
       this.users[user_id].incomingEventQueue = new SocketEventQueue();
       this.users[user_id].seq = 1;
@@ -51,7 +70,7 @@ export default class RoomRouter {
   }
 
   /**
-   * Removes a user from the RoomRouter.
+   * Removes a user from the UserManager.
    *
    * If they are in a room, removes them from the room.
    * If the resulting room is empty, it is deleted.
@@ -71,7 +90,13 @@ export default class RoomRouter {
     delete this.userRoomMap[user_id];
   }
 
-  disconnectUser(user_id: string) {
+  /**
+   * Marks a user as disconnected.
+   *
+   * Will silently succeed and log an error if no user in the router exists
+   * for the given user_id
+   */
+  disconnectUser(user_id: string): void {
     let user = this.users[user_id];
     if (user === undefined) {
       log.error({
@@ -84,11 +109,14 @@ export default class RoomRouter {
     user.connected = false;
   }
 
-  addUserToRoom(user_id: string, room_id: string) {
+  /**
+   * Adds a user to a room
+   */
+  addUserToRoom(user_id: string, room_id: string): void {
     console.log(`add user '${user_id}' to room '${room_id}'`);
     let user = this.users[user_id];
     if (user === undefined) {
-      throw new Error(`user ${user_id} not tracked by this RoomRouter`);
+      throw new Error(`user ${user_id} not tracked by this UserManager`);
     }
     let room = this.__createOrGetRoom(room_id);
     room.addParticipant(this.users[user_id]);
@@ -100,7 +128,7 @@ export default class RoomRouter {
   /**
    * Get a room if it exists. Otherwise, create it.
    */
-  __createOrGetRoom(room_id: string) {
+  __createOrGetRoom(room_id: string): Room {
     if (!this.rooms.hasOwnProperty(room_id)) {
       this.rooms[room_id] = new Room(room_id);
       return this.rooms[room_id];
@@ -108,16 +136,19 @@ export default class RoomRouter {
     return this.rooms[room_id];
   }
 
-  getRoomForUser(user_id: string) {
+  /**
+   * Look up the room for a user, or null if a user is not in a room.
+   */
+  getRoomForUser(user_id: string): ?Room {
     let user = this.users[user_id];
     if (user === undefined) {
-      throw new Error(`user ${user_id} not tracked by this RoomRouter`);
+      throw new Error(`user ${user_id} not tracked by this UserManager`);
     }
     let room_id = this.userRoomMap[user_id];
     return room_id ? this.rooms[room_id] : null;
   }
 
-  getUser(user_id: string) {
-    return this.users[user_id];
+  getUser(user_id: string): ?User {
+    return this.users[user_id] || null;
   }
 }
