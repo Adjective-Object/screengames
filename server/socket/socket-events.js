@@ -6,7 +6,7 @@ let roomRouter = new RoomRouter();
 
 let bindClientEvents = socket => {
   let socket_user_id = null;
-  socket.on('join_room', ({room_id, user_id}) => {
+  socket.on('join_room', ({ room_id, user_id }) => {
     // Add a user or do nothing if they were not added correctly.
     let user_already_connected = roomRouter.addOrRecoverUser(user_id, socket);
     if (!user_already_connected) {
@@ -14,7 +14,7 @@ let bindClientEvents = socket => {
         type: 'duplicate_connection',
         socket_id: socket.id,
         user_id: user_id,
-        message: `received duplicate connection for user ${user_id}`
+        message: `received duplicate connection for user ${user_id}`,
       });
       socket.disconnect();
       return;
@@ -30,8 +30,8 @@ let bindClientEvents = socket => {
     } else {
       log.error({
         type: 'change_rooms_not_implemented',
-        message: 'can\'t yet change rooms',
-      })
+        message: "can't yet change rooms",
+      });
     }
   });
 
@@ -43,7 +43,7 @@ let bindClientEvents = socket => {
         user_id: socket_user_id,
         event: event,
         message: `got event before join_room`,
-      })
+      });
       return;
     }
     let room = roomRouter.getRoomForUser(socket_user_id);
@@ -56,7 +56,7 @@ let bindClientEvents = socket => {
 
   socket.on('disconnect', () => {
     if (socket_user_id) {
-      roomRouter.disconnectUser(socket_user_id)
+      roomRouter.disconnectUser(socket_user_id);
     }
   });
 };
