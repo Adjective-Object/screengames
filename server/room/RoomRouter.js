@@ -1,25 +1,29 @@
+// @flow
 import Room from './Room';
 import SocketEventQueue from '../../util/socket/SocketEventQueue';
-import log from '../../util/log'
-/*
+import log from '../../util/log';
+import io from 'socket.io';
 
-interface User {
-  id: string
-  seq: number
+export type User = {
+  id: string,
+  seq: number,
   socket: io.Socket,
-  incomingEventQueue: SocketEventQueue
-}
-
-*/
+  incomingEventQueue: SocketEventQueue,
+  connected: boolean,
+};
 
 export default class RoomRouter {
+  rooms: { [string]: Room };
+  users: { [string]: User };
+  userRoomMap: { [string]: string };
+
   constructor() {
     this.rooms = {};
     this.users = {};
     this.userRoomMap = {};
   }
 
-  addOrRecoverUser(user_id, socket) {
+  addOrRecoverUser(user_id: string, socket: io.Socket) {
     if (this.users.hasOwnProperty(user_id)) {
       // User already tracked. Try to recover session
       if (this.users[user_id].connected) {
@@ -33,7 +37,7 @@ export default class RoomRouter {
       log.info({
         type: 'add_user',
         user_id: user_id,
-        socket_id: socket.id
+        socket_id: socket.id,
       });
       this.users[user_id] = {
         id: user_id,
@@ -52,7 +56,7 @@ export default class RoomRouter {
    * If they are in a room, removes them from the room.
    * If the resulting room is empty, it is deleted.
    */
-  removeUser(socket) {
+  removeUser(socket: io.Socket) {
     let user_id = socket.id;
     console.log('remove user', user_id);
     let room = this.getRoomForUser(user_id);
@@ -67,20 +71,20 @@ export default class RoomRouter {
     delete this.userRoomMap[user_id];
   }
 
-  disconnectUser(user_id) {
+  disconnectUser(user_id: string) {
     let user = this.users[user_id];
     if (user === undefined) {
       log.error({
         type: 'disconnect_untracked_user',
         user_id: user_id,
         message: `untracked user with id ${user_id} was marked as disconnected`,
-      })
+      });
       return;
     }
     user.connected = false;
   }
 
-  addUserToRoom(user_id, room_id) {
+  addUserToRoom(user_id: string, room_id: string) {
     console.log(`add user '${user_id}' to room '${room_id}'`);
     let user = this.users[user_id];
     if (user === undefined) {
@@ -96,7 +100,7 @@ export default class RoomRouter {
   /**
    * Get a room if it exists. Otherwise, create it.
    */
-  __createOrGetRoom(room_id) {
+  __createOrGetRoom(room_id: string) {
     if (!this.rooms.hasOwnProperty(room_id)) {
       this.rooms[room_id] = new Room(room_id);
       return this.rooms[room_id];
@@ -104,7 +108,7 @@ export default class RoomRouter {
     return this.rooms[room_id];
   }
 
-  getRoomForUser(user_id) {
+  getRoomForUser(user_id: string) {
     let user = this.users[user_id];
     if (user === undefined) {
       throw new Error(`user ${user_id} not tracked by this RoomRouter`);
@@ -113,7 +117,7 @@ export default class RoomRouter {
     return room_id ? this.rooms[room_id] : null;
   }
 
-  getUser(user_id) {
+  getUser(user_id: string) {
     return this.users[user_id];
   }
 }

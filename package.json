@@ -30,6 +30,8 @@
     "babel-preset-stage-3": "^6.24.1",
     "brunch": "^2",
     "clean-css-brunch": "^2",
+    "flow-bin": "^0.57.3",
+    "flow-typed": "^2.2.1",
     "jest": "^21.1.0",
     "nodemon": "^1.12.1",
     "prettier": "^1.7.0",

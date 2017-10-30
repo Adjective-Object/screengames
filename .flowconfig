@@ -1,0 +1,12 @@
+[ignore]
+.*node_modules/.*
+
+[include]
+client/.*
+
+[libs]
+
+[options]
+
+[version]
+0.47.0
