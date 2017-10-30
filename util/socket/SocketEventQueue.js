@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import log from '../../util/log';
 /*
 type ClientEventQueue {
     queuedEvents: {},
@@ -87,9 +88,12 @@ export default class SocketEventQueue {
       i => this.queuedSeq.indexOf(i) === -1,
     );
     if (this.queuedEvents.length % 100 == 0) {
-      console.warn(
-        `event queue reached ${this.queuedEvents.length} pending events`,
-      );
+      log.warn({
+        type: 'event_queue_high',
+        message: `event queue reached ${this.queuedEvents
+          .length} pending events`,
+        event_count: this.queuedEvents.length,
+      });
     }
     this.pendingSeq = this.pendingSeq.concat(new_pending);
     this.maxSeq = Math.max(this.maxSeq, event.seq);

@@ -1,4 +1,5 @@
 import SocketEventQueue from '../SocketEventQueue';
+import log from '../../../util/log';
 
 describe('SocketEventQueue', () => {
   let queue;
@@ -42,6 +43,9 @@ describe('SocketEventQueue', () => {
   });
 
   it('throws an error when the client queues too many events', () => {
+    // Mock warnings to stifle messages
+    log.warn = jest.fn();
+
     // Queue events up to the limit, skipping seq 1 so that the ingested
     // events are queued instead of sent
     for (let i = 1; i < 400; i++) {
