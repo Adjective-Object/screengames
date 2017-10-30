@@ -1,25 +1,64 @@
 import socketio from 'socket.io';
 import RoomRouter from '../room/RoomRouter';
+import log from '../../util/log';
 
 let roomRouter = new RoomRouter();
 
 let bindClientEvents = socket => {
-  roomRouter.addUser(socket);
+  let socket_user_id = null;
+  socket.on('join_room', ({room_id, user_id}) => {
+    // Add a user or do nothing if they were not added correctly.
+    let user_already_connected = roomRouter.addOrRecoverUser(user_id, socket);
+    if (!user_already_connected) {
+      log.error({
+        type: 'duplicate_connection',
+        socket_id: socket.id,
+        user_id: user_id,
+        message: `received duplicate connection for user ${user_id}`
+      });
+      socket.disconnect();
+      return;
+    }
+    socket_user_id = user_id;
 
-  socket.on('join_room', room_id => {
-    roomRouter.addUserToRoom(socket.id, room_id);
-  });
-
-  socket.on('event', event => {
-    let room = roomRouter.getRoomForUser(socket.id);
-    if (room) {
-      room.processClientEvent(socket.id, event);
+    let current_room = roomRouter.getRoomForUser(user_id);
+    if (current_room === null) {
+      roomRouter.addUserToRoom(socket_user_id, room_id);
+    } else if (current_room.id === room_id) {
+      let user = roomRouter.getUser(user_id);
+      current_room.recoverParticipantSession(user);
     } else {
-      console.log(`client ${socket.id} is not in a room?`);
+      log.error({
+        type: 'change_rooms_not_implemented',
+        message: 'can\'t yet change rooms',
+      })
     }
   });
 
-  socket.on('disconnect', () => roomRouter.removeUser(socket));
+  socket.on('event', event => {
+    if (socket_user_id === null) {
+      log.error({
+        type: 'event_before_join_room',
+        socket_id: socket.id,
+        user_id: socket_user_id,
+        event: event,
+        message: `got event before join_room`,
+      })
+      return;
+    }
+    let room = roomRouter.getRoomForUser(socket_user_id);
+    if (room) {
+      room.processClientEvent(socket_user_id, event);
+    } else {
+      console.log(`client ${socket_user_id} is not in a room?`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    if (socket_user_id) {
+      roomRouter.disconnectUser(socket_user_id)
+    }
+  });
 };
 
 let io = new socketio();

@@ -5,7 +5,9 @@ import CanvasPanningTool from './pictionary/tools/CanvasPanningTool';
 import DrawingRenderer from './pictionary/DrawingRenderer';
 import SocketEventQueue from '../util/socket/SocketEventQueue';
 import io from 'socket.io-client';
+import guid from './util/guid';
 import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
+import Cookies from 'js-cookie';
 
 // Convert from DOM space to canvas space based on the current SVG bounding
 // rectangle and the viewbox of the rtarget
@@ -27,6 +29,15 @@ const transformToCanvasSpace = (camera, draw_target, mouse_event) => {
     y: viewbox_y,
   });
 };
+
+// TODO make this not bad
+let user_id = Cookies.get('user_id');
+if (!user_id) {
+  console.log('allocate new user id');
+  user_id = guid();
+  Cookies.set('user_id', user_id);
+}
+console.log('user_id:', user_id);
 
 document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
@@ -57,7 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let socket = io();
   socket.on('connect', () => {
-    socket.emit('join_room', 'default');
+    socket.emit('join_room', {
+      room_id: 'default',
+      user_id: user_id,
+    });
   });
 
   socket.on('event', event => {

@@ -35,6 +35,16 @@ class Room {
       userData: {},
     };
 
+    this.__sendGameState(user);
+
+    this.updateUserData(user.id, {});
+  }
+
+  recoverParticipantSession(user) {
+    this.__sendGameState(user);
+  }
+
+  __sendGameState(user) {
     // Send initial information about other users to clients as they join
     user.socket.emit('event', {
       seq: user.seq++,
@@ -50,8 +60,6 @@ class Room {
       type: 'initialize',
       initial_state: this.currentGame.getState(),
     });
-
-    this.updateUserData(user.id, {});
   }
 
   removeParticipant(user_id) {
