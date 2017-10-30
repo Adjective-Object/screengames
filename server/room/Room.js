@@ -70,8 +70,15 @@ class Room {
     delete this.participants[user_id];
   }
 
+  /**
+   * A room is empty if every user is empty or if all users in the
+   * room are not connected.
+   */
   isEmpty() {
-    return Object.keys(this.participants).length === 0;
+    return (
+      Object.keys(this.participants).length === 0 ||
+      this.participants.all(participant => !participant.connected)
+    );
   }
 
   updateUserData(user_id, user_data) {
