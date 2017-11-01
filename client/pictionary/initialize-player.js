@@ -1,11 +1,11 @@
-import Drawing from './pictionary/Drawing';
-import Camera from './pictionary/Camera';
-import PenTool from './pictionary/tools/PenTool';
-import CanvasPanningTool from './pictionary/tools/CanvasPanningTool';
-import DrawingRenderer from './pictionary/DrawingRenderer';
-import SocketEventQueue from '../util/socket/SocketEventQueue';
+import Drawing from './Drawing';
+import Camera from './Camera';
+import PenTool from './tools/PenTool';
+import CanvasPanningTool from './tools/CanvasPanningTool';
+import DrawingRenderer from './DrawingRenderer';
+import SocketEventQueue from '../../util/socket/SocketEventQueue';
 import io from 'socket.io-client';
-import guid from './util/guid';
+import guid from '../util/guid';
 import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
 import Cookies from 'js-cookie';
 
