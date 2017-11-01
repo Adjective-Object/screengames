@@ -40,7 +40,7 @@ class WrappedLogger {
       console.log(evt.type, '\t', evt.message);
       fn.call(args)
     } else {
-    	console.log.call(args);
+    	console.log.apply(console.log, args);
       fn.call(args);
     }
   }

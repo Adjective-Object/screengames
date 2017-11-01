@@ -59,7 +59,11 @@ let bindClientEvents = socket => {
 
 let io = new socketio();
 io.on('connect', socket => {
-  console.log('got socket client', socket.id);
+  log.debug({
+    type: 'socket_connect',
+    socket_id: socket.id,
+    message: `got socket client ${socket.id}`,
+  });
   bindClientEvents(socket);
 });
 

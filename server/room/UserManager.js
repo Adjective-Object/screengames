@@ -46,6 +46,7 @@ export default class UserManager {
         type: 'add_user',
         user_id: user_id,
         socket_id: socket.id,
+        message: `add user ${user_id} from socket ${socket.id}`
       });
       this.users[user_id] = {
         id: user_id,
