@@ -9,7 +9,7 @@
     "start": "brunch watch --server",
     "build": "brunch build --production",
     "format": "prettier --write 'client/**/*.js' 'server/**/*.js' 'util/**/*.js' 'client/**/*.css' 'server/**/*.css' 'util/**/*.css'",
-    "dev-server": "nodemon --watch server --exec babel-node server/run-app.js"
+    "dev-server": "nodemon --watch server --watch util --exec babel-node server/run-app.js"
   },
   "dependencies": {
     "bunyan": "^1.8.12",
