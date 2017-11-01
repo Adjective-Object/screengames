@@ -41,7 +41,7 @@ export default class UserManager {
       this.users[user_id].incomingEventQueue = new SocketEventQueue();
       this.users[user_id].seq = 1;
     } else {
-      log.info({
+      log.debug({
         type: 'add_user',
         user_id: user_id,
         socket_id: socket.id,
@@ -72,7 +72,7 @@ export default class UserManager {
         message: `user ${user_id} not tracked by this UserManager`,
       });
     }
-    log.info({
+    log.debug({
       type: 'remove_user',
       user_id: user_id,
       message: `remove user ${user_id}`,
@@ -124,7 +124,7 @@ export default class UserManager {
     let room = this.__createOrGetRoom(room_id);
     room.addParticipant(this.users[user_id]);
     let participant_ids = room.getParticipantIDs();
-    log.info({
+    log.debug({
       type: 'add_user_to_room',
       message: `add user '${user_id}' to room '${room_id}', new participants are ${participant_ids}`,
       user_id,

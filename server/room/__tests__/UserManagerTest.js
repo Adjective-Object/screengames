@@ -19,7 +19,7 @@ describe('UserManager', () => {
     test_socket_2 = new MockSocket('test-socket-id-2');
 
     // Mock logging to stifle messages
-    log.info = jest.fn();
+    log.debug = jest.fn();
   });
 
   describe('addOrRecoverUser', () => {
