@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Board</title>
+  <link rel="stylesheet" href="/client.css">
+  <script src="/vendor.js"></script>
+  <script src="/client.js"></script>
+  <script>require('client/pictionary/initialize-board');</script>
+</head>
+<body>
+<section id="game-container" class="game-container">
+<section id="drawing-container" class="drawing-container">
+<svg id="draw-target"
+     class="drawing-canvas"
+     width="400"
+     height="400"
+     viewbox="0 0 400 400"><g id="transform-host"></g></svg>
+<button class="tool-button toggle-fullscreen-button" id="toggle-fullscreen">
+  <section class="start-fullscreen">{{{icon_start_fullscreen}}}</section>
+  <section class="stop-fullscreen">{{{icon_stop_fullscreen}}}</section>
+</button>
+</section>
+</body>
+</html>

@@ -117,6 +117,10 @@ class Room {
   getParticipantIDs() {
     return Object.keys(this.participants);
   }
+
+  getParticipants() {
+    return Object.values(this.participants);
+  }
 }
 
 export default Room;

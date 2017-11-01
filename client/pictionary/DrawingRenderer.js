@@ -9,7 +9,10 @@ export default class DrawingRenderer {
       // Insert a new line as the last child of the svg
       group.appendChild(this.__renderBaseStroke(drawing.strokes[strokeID]));
 
-      if (strokeID == drawing_client.currentStrokeID) {
+      if (
+        drawing_client !== null &&
+        strokeID == drawing_client.currentStrokeID
+      ) {
         group.appendChild(
           this.__renderPendingLine(
             drawing.strokes[strokeID],

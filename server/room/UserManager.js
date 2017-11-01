@@ -40,6 +40,7 @@ export default class UserManager {
       this.users[user_id].socket = socket;
       this.users[user_id].incomingEventQueue = new SocketEventQueue();
       this.users[user_id].seq = 1;
+      this.users[user_id].connected = true;
     } else {
       log.debug({
         type: 'add_user',
@@ -147,16 +148,23 @@ export default class UserManager {
 
   __deleteUserRoomIfEmpty(user_id) {
     let room = this.getRoomForUser(user_id);
-    if (room) {
-      room.removeParticipant(user_id);
-      if (room.isEmpty()) {
-        log.info({
-          type: 'delete_room',
-          user_id: user_id,
-          message: `delete empty room ${room.id}`,
-        });
-        delete this.rooms[room.id];
-      }
+    if (room === null) return;
+    room.removeParticipant(user_id);
+    delete this.userRoomMap[user_id];
+
+    if (!room.isEmpty()) return;
+    log.debug({
+      type: 'delete_room',
+      user_id: user_id,
+      message: `delete empty room ${room.id}`,
+    });
+    delete this.rooms[room.id];
+    // Remove existing entries from the user room map for the deleted room
+    // (disconnected users that are still tracked)
+    let participants = room.getParticipants();
+    console.log(participants);
+    for (let participant of participants) {
+      delete this.userRoomMap[participant.user.id];
     }
   }
 
@@ -164,14 +172,14 @@ export default class UserManager {
    * Look up the room for a user, or null if a user is not in a room.
    */
   getRoomForUser(user_id) {
-    let user = this.users[user_id] || null;
-    if (user === null) {
-      return null;
+    let user = this.users[user_id];
+    if (user === undefined) {
       log.warn({
         type: 'user_not_in_manager',
         user_id: user_id,
         message: `user ${user_id} not tracked by this UserManager`,
       });
+      return null;
     }
     let room_id = this.userRoomMap[user_id];
     return room_id ? this.rooms[room_id] : null;
