@@ -14,6 +14,7 @@
   "dependencies": {
     "bunyan": "^1.8.12",
     "express": "^4.15.4",
+    "flow": "^0.2.3",
     "handlebars": "^4.0.10",
     "js-cookie": "^2.1.4",
     "lodash": "^4.17.4",
@@ -26,6 +27,7 @@
     "auto-reload-brunch": "^2",
     "babel-brunch": "~6.0",
     "babel-cli": "^6.26.0",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
     "babel-preset-latest": "^6",
     "babel-preset-stage-3": "^6.24.1",
     "brunch": "^2",
