@@ -43,13 +43,16 @@ export default class UserManager {
   addOrRecoverUser(user_id: ID_of<User>, socket: io.Socket) {
     // If the user is already connected, don't do that actually
     if (this.isUserConnected(user_id)) {
+      let connected_user = this.users[user_id];
       throw {
         type: 'duplicate_connection',
         socket_id: socket.id,
         user_id,
-        message: `received duplicate connection for user ${id_to_string(
-          user_id,
-        )}`,
+        message:
+          `received duplicate connection for user ` +
+          id_to_string(user_id) +
+          ` (currently on socket ${connected_user.socket.id}` +
+          ` from socket ${socket.id}`,
       };
     }
     if (this.users.hasOwnProperty(user_id)) {
@@ -121,6 +124,12 @@ export default class UserManager {
       });
       return;
     }
+    log.info({
+      type: 'disconnect_user',
+      user_id: user_id,
+      message: `user ${id_to_string(user_id)} on socket ${user.socket
+        .id} was marked disconnected`,
+    });
     user.connected = false;
     this.__deleteUserRoomIfEmpty(user_id);
   }
@@ -188,7 +197,6 @@ export default class UserManager {
     // Remove existing entries from the user room map for the deleted room
     // (disconnected users that are still tracked)
     let participants = room.getParticipants();
-    console.log(participants);
     for (let participant of participants) {
       delete this.userRoomMap[participant.user.id];
     }
