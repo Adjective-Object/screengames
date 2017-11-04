@@ -1,4 +1,4 @@
-import guid from '../../util/guid';
+import guid from '../../../util/guid';
 import distance from '../../util/distance';
 
 /*

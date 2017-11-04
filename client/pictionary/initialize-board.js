@@ -5,7 +5,7 @@ import CanvasPanningTool from './tools/CanvasPanningTool';
 import DrawingRenderer from './DrawingRenderer';
 import SocketEventQueue from '../../util/socket/SocketEventQueue';
 import io from 'socket.io-client';
-import guid from '../util/guid';
+import guid from '../../util/guid';
 import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
 
 document.addEventListener('DOMContentLoaded', () => {

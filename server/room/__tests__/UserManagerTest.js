@@ -10,6 +10,9 @@ describe('UserManager', () => {
 
   let test_user_id_1 = 'really-unique-user-id-1';
   let test_user_id_2 = 'really-unique-user-id-2';
+  let test_nonce_1 = 'nonce-1';
+  let test_nonce_2 = 'nonce-2';
+  let bad_nonce = 'bad_nonce';
   let test_room_id_1 = 'really-unique-room-id-1';
 
   beforeEach(() => {
@@ -22,26 +25,37 @@ describe('UserManager', () => {
     log.debug = jest.fn();
   });
 
-  describe('addOrRecoverUser', () => {
-    it('should create a user for the given ID with a given socket', () => {
-      // Precondition: user is not tracked by the manager
-      expect(manager.isUserConnected(test_user_id_1)).toEqual(false);
-
-      // Add the user to the manager
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
-      expect(manager.isUserConnected(test_user_id_1)).toEqual(true);
-
-      // Check that the socket was returned as expected
-      let user_in_manager = manager.getUser(test_user_id_1);
-      expect(user_in_manager.socket).toEqual(test_socket_1);
+  describe('connectUserSession', () => {
+    describe('when the user exists', () => {
+      beforeEach(() => {
+        manager.createUser(test_user_id_1, test_nonce_1);
+      });
+      it('should connect the user if the nonce matches', () => {
+        manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
+        let user = manager.users.get(test_user_id_1);
+        expect(user).not.toBeNull();
+        expect(user).toBeDefined();
+        expect(user.connected).toEqual(true);
+        expect(user.socket).toEqual(test_socket_1);
+      });
+      it('should throw if the nonce does not match', () => {
+        let exception = captureException(() =>
+          manager.connectUserSession(test_user_id_1, bad_nonce, test_socket_1),
+        );
+        expect(exception.type).toEqual('incorrect_nonce');
+      });
     });
-
-    it('should log an add_user message when a user is sucessfully added', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
-      let exception = captureException(() =>
-        manager.addOrRecoverUser(test_user_id_1, test_socket_1),
-      );
-      expect(exception.type).toEqual('duplicate_connection');
+    describe('when the user does not exist', () => {
+      it('should throw', () => {
+        let exception = captureException(() =>
+          manager.connectUserSession(
+            test_user_id_1,
+            test_nonce_1,
+            test_socket_1,
+          ),
+        );
+        expect(exception.type).toEqual('connect_nonexistant_user');
+      });
     });
   });
 
@@ -53,7 +67,8 @@ describe('UserManager', () => {
       expect(exception.type).toEqual('user_not_in_manager');
     });
     it('should remove the user from the room manager and their current room', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       expect(manager.getRoomForUser(test_user_id_1)).not.toEqual(null);
       manager.removeUser(test_user_id_1);
@@ -63,8 +78,9 @@ describe('UserManager', () => {
       'should delete the room the user is in if there are no other users' +
         ' in the room',
       () => {
-        // Precondition: user 1 is in room 1
-        manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+        // Precond:ition: user 1 is in room 1
+        manager.createUser(test_user_id_1, test_nonce_1);
+        manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
         manager.addUserToRoom(test_user_id_1, test_room_id_1);
         expect(manager.getRoom(test_room_id_1)).not.toEqual(null);
         // Remove user 1 from the room and expect to room to be deleted
@@ -74,8 +90,10 @@ describe('UserManager', () => {
     );
     it('should not delete the room the user is in if there are other connected users user in the room', () => {
       // Precondition: users 1 and 2 are in room 1
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
-      manager.addOrRecoverUser(test_user_id_2, test_socket_2);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
+      manager.createUser(test_user_id_2, test_nonce_2);
+      manager.connectUserSession(test_user_id_2, test_nonce_2, test_socket_2);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       manager.addUserToRoom(test_user_id_2, test_room_id_1);
       expect(manager.getRoom(test_room_id_1)).not.toEqual(null);
@@ -85,8 +103,10 @@ describe('UserManager', () => {
     });
     it('should delete the room the user is in if there are other users in the room, but they are disconnected', () => {
       // Precondition: users 1 and 2 are in room 1, user 2 is disconnected
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
-      manager.addOrRecoverUser(test_user_id_2, test_socket_2);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
+      manager.createUser(test_user_id_2, test_nonce_2);
+      manager.connectUserSession(test_user_id_2, test_nonce_2, test_socket_2);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       manager.addUserToRoom(test_user_id_2, test_room_id_1);
       expect(manager.getRoom(test_room_id_1)).not.toEqual(null);
@@ -99,7 +119,8 @@ describe('UserManager', () => {
 
   describe('disconnectUser', () => {
     it('should mark a user as disconnected in the manager', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       manager.disconnectUser(test_user_id_1);
       let user1 = manager.getUser(test_user_id_1);
@@ -110,7 +131,8 @@ describe('UserManager', () => {
       'should delete the room the user is in if they were the last connected' +
         ' user in the room',
       () => {
-        manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+        manager.createUser(test_user_id_1, test_nonce_1);
+        manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
         manager.addUserToRoom(test_user_id_1, test_room_id_1);
         manager.disconnectUser(test_user_id_1);
         expect(manager.getRoom(test_room_id_1)).toEqual(null);
@@ -120,8 +142,10 @@ describe('UserManager', () => {
 
   describe('addUserToRoom', () => {
     it('should create a new room containing the user if no room with that room_id exists', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
-      manager.addOrRecoverUser(test_user_id_2, test_socket_2);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.createUser(test_user_id_2, test_nonce_2);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
+      manager.connectUserSession(test_user_id_2, test_nonce_2, test_socket_2);
       expect(manager.getRoom(test_room_id_1)).toEqual(null);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       let room = manager.getRoom(test_room_id_1);
@@ -129,8 +153,10 @@ describe('UserManager', () => {
       expect(room_participants).toEqual([test_user_id_1]);
     });
     it('should add a user to the room if a room with that room_id exists', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
-      manager.addOrRecoverUser(test_user_id_2, test_socket_2);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
+      manager.createUser(test_user_id_2, test_nonce_2);
+      manager.connectUserSession(test_user_id_2, test_nonce_2, test_socket_2);
       expect(manager.getRoom(test_room_id_1)).toEqual(null);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       manager.addUserToRoom(test_user_id_2, test_room_id_1);
@@ -147,7 +173,8 @@ describe('UserManager', () => {
       expect(exception.type).toEqual('add_untracked_user');
     });
     it('should throw an exception if the user is marked as disconnected', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       manager.disconnectUser(test_user_id_1);
       let exception = captureException(() =>
         manager.addUserToRoom(test_user_id_1, test_room_id_1),
@@ -158,14 +185,16 @@ describe('UserManager', () => {
 
   describe('getRoomForUser', () => {
     it('should return the room the user is in when the user is in a room', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       let room = manager.getRoomForUser(test_user_id_1);
       expect(room).not.toEqual(null);
       expect(room.id).toEqual(test_room_id_1);
     });
     it('should return null when the user is not in a room', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       let room = manager.getRoomForUser(test_user_id_1);
       expect(room).toEqual(null);
     });
@@ -175,7 +204,8 @@ describe('UserManager', () => {
     it('should return the room the user is in when the user is in a room', () => {
       // Rooms can only exist when a user is in them, so add a user to the manager
       // then add them to the room.
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       manager.addUserToRoom(test_user_id_1, test_room_id_1);
       let room = manager.getRoom(test_room_id_1);
       expect(room).not.toEqual(null);
@@ -189,7 +219,8 @@ describe('UserManager', () => {
 
   describe('getUser', () => {
     it('should return the user when they exist in the manager', () => {
-      manager.addOrRecoverUser(test_user_id_1, test_socket_1);
+      manager.createUser(test_user_id_1, test_nonce_1);
+      manager.connectUserSession(test_user_id_1, test_nonce_1, test_socket_1);
       let user = manager.getUser(test_user_id_1);
       expect(user).not.toEqual(null);
       expect(user.id).toEqual(test_user_id_1);

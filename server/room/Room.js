@@ -2,12 +2,12 @@
 import Pictionary from '../games/Pictionary';
 import { mapValues, every } from 'lodash';
 import log from '../../util/log';
-import { id_to_string } from '../ID';
-import type { User } from './UserManager';
+import { id_to_string } from '../../util/ID';
+import type User from './User';
 import type { Game } from '../games/Game';
 import type { Event } from '../Event';
 import type io from 'socket.io';
-import type { ID_of } from '../ID';
+import type { ID_of } from '../../util/ID';
 
 export type Participant = {
   user: User,
@@ -88,8 +88,11 @@ class Room {
    */
   isEmpty(): boolean {
     return (
-      Object.keys(this.participants).length === 0 ||
-      every(this.participants, participant => !participant.user.connected)
+      this.participants.size === 0 ||
+      every(
+        Array.from(this.participants.values()),
+        participant => !participant.user.connected,
+      )
     );
   }
 

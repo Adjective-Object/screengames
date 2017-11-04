@@ -6,3 +6,10 @@ export default class CodedError extends Error {
     }
   }
 }
+
+export function invariantViolation(message: string) {
+  return new CodedError({
+    type: 'invariant_violation',
+    message,
+  });
+}

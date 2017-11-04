@@ -3,35 +3,43 @@ import Room from './Room';
 import SocketEventQueue from '../../util/socket/SocketEventQueue';
 import log from '../../util/log';
 import type io from 'socket.io';
-import CodedError from '../../util/CodedError';
-import { make_id_of, id_to_string } from '../ID';
-import type { Candidate_ID_of, ID_of } from '../ID';
-
-export type User = {
-  id: ID_of<User>,
-  socket: io.Socket,
-  incomingEventQueue: SocketEventQueue,
-  seq: number,
-  connected: boolean,
-};
+import CodedError, { invariantViolation } from '../../util/CodedError';
+import { make_id_of } from '../../util/ID';
+import type { Candidate_ID_of, ID_of } from '../../util/ID';
+import User from './User';
 
 export default class UserManager {
-  rooms: { [ID_of<Room>]: Room };
-  users: { [ID_of<User>]: User };
-  userRoomMap: { [ID_of<User>]: ID_of<Room> };
+  rooms: Map<ID_of<Room>, Room>;
+  users: Map<ID_of<User>, User>;
+  userRoomMap: Map<ID_of<User>, ID_of<Room>>;
 
   constructor() {
-    this.rooms = {};
-    this.users = {};
-    this.userRoomMap = {};
+    this.rooms = new Map();
+    this.users = new Map();
+    this.userRoomMap = new Map();
+  }
+
+  createUser(user_id: ID_of<User>, nonce: string): void {
+    this.users.set(user_id, new User(user_id, nonce));
   }
 
   /**
-   * Return true if a given user exists in the user database and the user is
+   * Return true if a given user exists in the user map and the user is
    * marked as connected
    */
-  isUserConnected(user_id: ID_of<User>) {
-    return this.users.hasOwnProperty(user_id) && this.users[user_id].connected;
+  doesUserExist(user_id: ID_of<User>): boolean {
+    return this.users.has(user_id);
+  }
+
+  /**
+   * Return true if a given user exists in the user map and the user is
+   * marked as connected
+   */
+  isUserConnected(user_id: ID_of<User>): boolean {
+    let user = this.users.get(user_id);
+    return (
+      this.users.hasOwnProperty(user_id) && user !== undefined && user.connected
+    );
   }
 
   /**
@@ -40,43 +48,45 @@ export default class UserManager {
    *
    * return false if a socket for the given user is already connected.
    */
-  addOrRecoverUser(user_id: ID_of<User>, socket: io.Socket) {
-    // If the user is already connected, don't do that actually
-    if (this.isUserConnected(user_id)) {
-      let connected_user = this.users[user_id];
-      throw {
-        type: 'duplicate_connection',
+  connectUserSession(
+    user_id: ID_of<User>,
+    nonce: string,
+    socket: io.Socket,
+  ): void {
+    // If the user is already connected, boot them from the room and overwrite
+    // the socket if the nonce matches
+    let current_user = this.users.get(user_id);
+    if (!current_user) {
+      throw new CodedError({
+        type: 'connect_nonexistant_user',
         socket_id: socket.id,
         user_id,
         message:
-          `received duplicate connection for user ` +
-          id_to_string(user_id) +
-          ` (currently on socket ${connected_user.socket.id}` +
-          ` from socket ${socket.id}`,
-      };
-    }
-    if (this.users.hasOwnProperty(user_id)) {
-      // User already tracked. Try to recover session
-      this.users[user_id].socket = socket;
-      this.users[user_id].incomingEventQueue = new SocketEventQueue();
-      this.users[user_id].seq = 1;
-      this.users[user_id].connected = true;
-    } else {
-      log.debug({
-        type: 'add_user',
-        user_id: user_id,
-        socket_id: socket.id,
-        message: `add user ${id_to_string(user_id)} from socket ${socket.id}`,
+          `tried to connect nonexistant user ` +
+          String(user_id) +
+          ` on socket ${socket.id}`,
       });
-      this.users[user_id] = {
-        id: user_id,
-        seq: 1,
-        socket: socket,
-        incomingEventQueue: new SocketEventQueue(),
-        connected: true,
-      };
     }
-    return true;
+    if (nonce !== current_user.nonce) {
+      throw new CodedError({
+        type: 'incorrect_nonce',
+        socket_id: socket.id,
+        user_id,
+        message:
+          `submitted mismatched nonce ${nonce} for user ` +
+          String(user_id) +
+          ` on socket ${socket.id}`,
+      });
+    }
+    log.info({
+      type: 'connect_user_session',
+      user_id,
+      socket_id: socket.id,
+      message: `connected user ${String(user_id)} on socket ${String(
+        socket.id,
+      )}`,
+    });
+    current_user.connect(socket);
   }
 
   /**
@@ -87,23 +97,21 @@ export default class UserManager {
    */
   removeUser(user_id: ID_of<User>) {
     // Throw an error if the user is not in the tracker
-    if (!this.users.hasOwnProperty(user_id)) {
+    if (!this.users.has(user_id)) {
       throw new CodedError({
         type: 'user_not_in_manager',
         user_id: user_id,
-        message: `user ${id_to_string(
-          user_id,
-        )} not tracked by this UserManager`,
+        message: `user ${String(user_id)} not tracked by this UserManager`,
       });
     }
     log.debug({
       type: 'remove_user',
       user_id: user_id,
-      message: `remove user ${id_to_string(user_id)}`,
+      message: `remove user ${String(user_id)}`,
     });
     this.__deleteUserRoomIfEmpty(user_id);
-    delete this.users[user_id];
-    delete this.userRoomMap[user_id];
+    this.users.delete(user_id);
+    this.userRoomMap.delete(user_id);
   }
 
   /**
@@ -113,24 +121,26 @@ export default class UserManager {
    * for the given user_id
    */
   disconnectUser(user_id: ID_of<User>) {
-    let user = this.users[user_id];
-    if (user === undefined) {
+    let user = this.users.get(user_id);
+    if (!user) {
       log.error({
         type: 'disconnect_untracked_user',
         user_id: user_id,
-        message: `untracked user with id ${id_to_string(
+        message: `untracked user with id ${String(
           user_id,
         )} was marked as disconnected`,
       });
       return;
     }
+    let socket_id = user.socket ? user.socket.id : '<no socket>';
     log.info({
       type: 'disconnect_user',
       user_id: user_id,
-      message: `user ${id_to_string(user_id)} on socket ${user.socket
-        .id} was marked disconnected`,
+      message:
+        `user ${String(user_id)} on` +
+        ` socket ${socket_id} was marked disconnected`,
     });
-    user.connected = false;
+    user.disconnect();
     this.__deleteUserRoomIfEmpty(user_id);
   }
 
@@ -138,67 +148,66 @@ export default class UserManager {
    * Adds a user to a room
    */
   addUserToRoom(user_id: ID_of<User>, room_id: ID_of<Room>): void {
-    let user = this.users[user_id];
-    if (user === undefined) {
+    let user = this.users.get(user_id);
+    if (!user) {
       throw new CodedError({
         type: 'add_untracked_user',
-        message: `user ${id_to_string(
-          user_id,
-        )} not tracked by this UserManager`,
+        message: `user ${String(user_id)} not tracked by this UserManager`,
         user_id: user_id,
       });
     }
-    if (!user.connected) {
+    if (!user.isConnected()) {
       throw new CodedError({
         type: 'add_disconnected_user',
-        message: `user ${id_to_string(user_id)} is disconnected`,
+        message: `tried to add disconnected user ${String(user_id)}`,
         user_id: user_id,
       });
     }
     let room = this.__createOrGetRoom(room_id);
-    room.addParticipant(this.users[user_id]);
+    room.addParticipant(user);
     let participant_ids = room.getParticipantIDs();
     log.debug({
       type: 'add_user_to_room',
-      message: `add user '${id_to_string(user_id)}' to room '${id_to_string(
+      message: `add user '${String(user_id)}' to room '${String(
         room_id,
       )}', new participants are ${participant_ids.toString()}`,
       user_id,
       room_id,
       participants: participant_ids,
     });
-    this.userRoomMap[user_id] = room_id;
+    this.userRoomMap.set(user_id, room_id);
   }
 
   /**
    * Get a room if it exists. Otherwise, create it.
    */
   __createOrGetRoom(room_id: ID_of<Room>): Room {
-    if (!this.rooms.hasOwnProperty(room_id)) {
-      this.rooms[room_id] = new Room(room_id);
-      return this.rooms[room_id];
+    let room = this.rooms.get(room_id);
+    if (!room) {
+      room = new Room(room_id);
+      this.rooms.set(room_id, room);
     }
-    return this.rooms[room_id];
+    return room;
   }
 
   __deleteUserRoomIfEmpty(user_id: ID_of<User>): void {
     let room = this.getRoomForUser(user_id);
     if (room === null) return;
     room.removeParticipant(user_id);
-    delete this.userRoomMap[user_id];
+    this.userRoomMap.delete(user_id);
 
     if (!room.isEmpty()) return;
-    log.debug({
+    log.info({
       type: 'delete_room',
       user_id: user_id,
-      message: `delete empty room ${id_to_string(room.id)}`,
+      message: `delete empty room ${String(room.id)}`,
     });
-    delete this.rooms[room.id];
+    this.rooms.delete(room.id);
     // Remove existing entries from the user room map for the deleted room
     // (disconnected users that are still tracked)
     let participants = room.getParticipants();
     for (let participant of participants) {
-      delete this.userRoomMap[participant.user.id];
+      this.userRoomMap.delete(participant.user.id);
     }
   }
 
@@ -206,26 +215,24 @@ export default class UserManager {
    * Look up the room for a user, or null if a user is not in a room.
    */
   getRoomForUser(user_id: ID_of<User>): Room | null {
-    let user = this.users[user_id];
-    if (user === undefined) {
+    let user = this.users.get(user_id);
+    if (!user) {
       log.warn({
         type: 'user_not_in_manager',
         user_id: user_id,
-        message: `user ${id_to_string(
-          user_id,
-        )} not tracked by this UserManager`,
+        message: `user ${String(user_id)} not tracked by this UserManager`,
       });
       return null;
     }
-    let room_id = this.userRoomMap[user_id];
-    return room_id ? this.rooms[room_id] : null;
+    let room_id = this.userRoomMap.get(user_id);
+    return room_id ? this.rooms.get(room_id) || null : null;
   }
 
   getUser(user_id: ID_of<User>): User | null {
-    return this.users[user_id] || null;
+    return this.users.get(user_id) || null;
   }
 
   getRoom(room_id: ID_of<Room>): Room | null {
-    return this.rooms[room_id] || null;
+    return this.rooms.get(room_id) || null;
   }
 }
