@@ -28,8 +28,10 @@ let initSocket = socket => {
         logging_in_nonce = credentials.nonce;
         if (!userManager.doesUserExist(logging_in_user_id)) {
           log.info({
-            type: 'login_create_new_user',
-            message: `creating new user ${String(logging_in_user_id)} on login`,
+            type: 'login_and_create_user_for_credentials',
+            message:
+              `creating new user ${String(logging_in_user_id)}` +
+              ` on login with credentials`,
             user_id: logging_in_user_id,
           });
           userManager.createUser(logging_in_user_id, logging_in_nonce);
@@ -48,7 +50,17 @@ let initSocket = socket => {
       } else {
         logging_in_user_id = make_id_of(guid());
         logging_in_nonce = guid();
+        log.info({
+          type: 'login_create_new_user',
+          message: `creating new user ${String(logging_in_user_id)} on login`,
+          user_id: logging_in_user_id,
+        });
         userManager.createUser(logging_in_user_id, logging_in_nonce);
+        userManager.connectUserSession(
+          logging_in_user_id,
+          logging_in_nonce,
+          socket,
+        );
       }
       let logged_in_credentials: Credentials = {
         user_id: logging_in_user_id,
