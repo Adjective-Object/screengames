@@ -1,3 +1,5 @@
+let fs = require('fs');
+
 // See http://brunch.io for documentation.
 exports.paths = {
     public:  'public',
@@ -16,7 +18,7 @@ exports.files = {
 };
 
 exports.plugins = {
-  babel: {presets: ['latest']}
+  babel: JSON.parse(fs.readFileSync('./.babelrc', 'utf-8')),
 };
 
 exports.conventions = {

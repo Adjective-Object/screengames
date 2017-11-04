@@ -67,19 +67,19 @@ class WrappedLogger {
       if (fn) fn.call(args);
     }
   }
-  info() {
+  info(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
     this._thing(logfn, arguments);
   }
-  debug() {
+  debug(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
     this._thing(logfn, arguments);
   }
-  warn() {
+  warn(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
     this._thing(logfn, arguments);
   }
-  error() {
+  error(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
     this._thing(logfn, arguments);
   }
