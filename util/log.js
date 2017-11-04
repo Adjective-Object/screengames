@@ -5,13 +5,13 @@ type Environment = 'BROWSER' | 'JEST' | 'NODE' | 'UNKNOWN';
 
 function determineEnvironment(): Environment {
   // $FlowFixMe ignored for environment checks
-  if (typeof jest !== undefined) {
+  if (typeof jest !== 'undefined') {
     return 'JEST';
     // $FlowFixMe ignored for environment checks
-  } else if (typeof window !== undefined) {
+  } else if (typeof window !== 'undefined') {
     return 'BROWSER';
     // $FlowFixMe ignored for environment checks
-  } else if (typeof __file !== undefined) {
+  } else if (typeof __file !== 'undefined') {
     return 'NODE';
   }
   return 'UNKNOWN';
@@ -53,7 +53,7 @@ class WrappedLogger {
   }
   _thing(fn: FlexibleFunction | null, ...args: any[]) {
     let evt = args.length > 0 ? args[0] : null;
-    if (evt && evt.type && evt.message) {
+    if (evt && evt.type !== undefined && evt.message !== undefined) {
       // don't log in tests -- too high noise
       if (environment !== 'JEST') {
         console.log(evt.type, '\t', evt.message);
@@ -62,26 +62,26 @@ class WrappedLogger {
     } else {
       // don't log in tests -- too high noise
       if (environment !== 'JEST') {
-        console.log.apply(console.log, args);
+        console.log.call(console.log, args);
       }
       if (fn) fn.call(args);
     }
   }
   info(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
-    this._thing(logfn, arguments);
+    this._thing(logfn, ...arguments);
   }
   debug(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
-    this._thing(logfn, arguments);
+    this._thing(logfn, ...arguments);
   }
   warn(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
-    this._thing(logfn, arguments);
+    this._thing(logfn, ...arguments);
   }
   error(...args: any[]) {
     let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
-    this._thing(logfn, arguments);
+    this._thing(logfn, ...arguments);
   }
 }
 
