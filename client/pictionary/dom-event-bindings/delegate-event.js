@@ -4,7 +4,6 @@ export default function delegateEvent(
   selector: string,
   handler: (e: any) => void,
 ) {
-  console.log(scope);
   scope.addEventListener(event, (e: any) => {
     let current = e.srcElement || e.originalTarget;
     while (current !== undefined && current !== null) {
