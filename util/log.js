@@ -1,46 +1,69 @@
-// import bunyan from 'bunyan';
+// @flow
+import bunyan from 'bunyan';
 
-// TODO
-// const bunyan_logger = bunyan.createLogger(
-//   typeof window === 'undefined'
-//     ? // Node-like environment. Log to file
-//       {
-//         name: 'screengames',
-//         streams: [
-//           {
-//             level: 'debug',
-//             path: './logs/debug.log',
-//           },
-//           {
-//             level: 'info',
-//             path: './logs/info.log',
-//           },
-//           {
-//             level: 'warn',
-//             path: './logs/warn.log',
-//           },
-//           {
-//             level: 'error',
-//             path: './logs/error.log',
-//           },
-//         ],
-//       }
-//     : {
-//         name: 'screengames',
-//       },
-// );
+type Environment = 'BROWSER' | 'JEST' | 'NODE' | 'UNKNOWN';
+
+function determineEnvironment(): Environment {
+  // $FlowFixMe ignored for environment checks
+  if (typeof jest !== undefined) {
+    return 'JEST';
+    // $FlowFixMe ignored for environment checks
+  } else if (typeof window !== undefined) {
+    return 'BROWSER';
+    // $FlowFixMe ignored for environment checks
+  } else if (typeof __file !== undefined) {
+    return 'NODE';
+  }
+  return 'UNKNOWN';
+}
+
+const environment = determineEnvironment();
+
+let bunyan_logger = null;
+if (environment === 'NODE') {
+  bunyan_logger = bunyan.createLogger({
+    name: 'screengames',
+    streams: [
+      {
+        level: 'debug',
+        path: './logs/debug.log',
+      },
+      {
+        level: 'info',
+        path: './logs/info.log',
+      },
+      {
+        level: 'warn',
+        path: './logs/warn.log',
+      },
+      {
+        level: 'error',
+        path: './logs/error.log',
+      },
+    ],
+  });
+}
+
+type FlexibleFunction = (...args: any[]) => void;
 
 class WrappedLogger {
-  constructor(logger) {
+  logger: bunyan.Logger | null;
+  constructor(logger: bunyan.Logger | null) {
     this.logger = logger;
   }
-  _thing(fn, args) {
+  _thing(fn: FlexibleFunction | null, ...args: any[]) {
     let evt = args.length > 0 ? args[0] : null;
     if (evt && evt.type && evt.message) {
-      console.log(evt.type, '\t', evt.message);
+      // don't log in tests -- too high noise
+      if (environment !== 'JEST') {
+        console.log(evt.type, '\t', evt.message);
+      }
       if (fn) fn.call(args);
     } else {
-      console.log.apply(console.log, args);
+      // don't log in tests -- too high noise
+      if (environment !== 'JEST') {
+        console.log.apply(console.log, args);
+      }
       if (fn) fn.call(args);
     }
   }
@@ -62,4 +85,4 @@ class WrappedLogger {
   }
 }
 
-export default new WrappedLogger();
+export default new WrappedLogger(bunyan_logger);

@@ -28,6 +28,7 @@
     "babel-brunch": "~6.0",
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-preset-es2017": "^6.24.1",
     "babel-preset-latest": "^6",
     "babel-preset-stage-3": "^6.24.1",
     "brunch": "^2",
