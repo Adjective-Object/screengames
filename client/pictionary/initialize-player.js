@@ -9,12 +9,14 @@ import guid from '../../util/guid';
 import initSession from '../util/negotiate-session';
 import transformToCanvasSpace from './transform-to-canvas-space';
 import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton';
+import PointSpace from './PointSpace';
 document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
   let camera = new Camera();
   let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById('draw-target');
   let eventQueue = new SocketEventQueue();
+  let pointSpace = new PointSpace(camera, drawTarget);
 
   // The pen tool is used in rendering, so keep it in scope
   let pen_tool = new PenTool();
@@ -79,43 +81,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function mouseEventToPointSet(mouse_event) {
-    return {
-      world_space: [transformToCanvasSpace(camera, drawTarget, mouse_event)],
-      screen_space: [{ x: mouse_event.clientX, y: mouse_event.clientY }],
-    };
-  }
-
-  function touchesToPointSet(touches) {
-    let world_space_points = Array.from(touches).map(
-      transformToCanvasSpace.bind(null, camera, drawTarget),
-    );
-    let screen_space_points = Array.from(touches).map(touch => ({
-      x: touch.clientX,
-      y: touch.clientY,
-    }));
-    return {
-      world_space: world_space_points,
-      screen_space: screen_space_points,
-    };
-  }
-
   // Bind mouse events
   drawTarget.addEventListener('mousedown', e => {
     let time = new Date().getTime();
-    let point_set = mouseEventToPointSet(e);
+    let point_set = pointSpace.mouseEventToPointSet(e);
     let tool_event = current_tool.onTouchStart(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener('mousemove', e => {
     let time = new Date().getTime();
-    let point_set = mouseEventToPointSet(e);
+    let point_set = pointSpace.mouseEventToPointSet(e);
     let tool_event = current_tool.onTouchMove(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener('mouseup', e => {
     let time = new Date().getTime();
-    let point_set = mouseEventToPointSet(e);
+    let point_set = pointSpace.mouseEventToPointSet(e);
     let remaining_point_set = { world_space: [], screen_space: [] };
     let tool_event = current_tool.onTouchEnd(
       point_set,
@@ -130,20 +111,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Prevent double-tap-to-zoom
     e.preventDefault();
     let time = new Date().getTime();
-    let point_set = touchesToPointSet(e.touches);
+    let point_set = pointSpace.touchesToPointSet(e.touches);
     let tool_event = current_tool.onTouchStart(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener('touchmove', e => {
     let time = new Date().getTime();
-    let point_set = touchesToPointSet(e.touches);
+    let point_set = pointSpace.touchesToPointSet(e.touches);
     let tool_event = current_tool.onTouchMove(point_set, time);
     handleToolEvent(tool_event);
   });
   document.addEventListener('touchend', e => {
     let time = new Date().getTime();
-    let changed_point_set = touchesToPointSet(e.changedTouches);
-    let remaining_point_set = touchesToPointSet(e.touches);
+    let changed_point_set = pointSpace.touchesToPointSet(e.changedTouches);
+    let remaining_point_set = pointSpace.touchesToPointSet(e.touches);
     let tool_event = current_tool.onTouchEnd(
       changed_point_set,
       remaining_point_set,
