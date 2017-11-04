@@ -12,34 +12,54 @@ export type Credentials = {
 };
 
 function setCookiesAndResolve(resolve, { user_id, nonce }) {
-  console.log('save user and nonce in cookie');
   Cookies.set('user_id', user_id);
   Cookies.set('nonce', nonce);
   resolve({ user_id, nonce });
 }
 
-export default function initSession(socket: io.socket): Promise<Credentials> {
-  let user_id = Cookies.get('user_id') || null;
-  let nonce = Cookies.get('nonce') || null;
+export default function initSession(
+  socket: io.socket,
+  should_use_cookies: boolean = true,
+): Promise<Credentials> {
+  let user_id = null;
+  let nonce = null;
+
+  if (should_use_cookies) {
+    log.debug({
+      type: 'load_credentials_from_cookie',
+      message: `trying to load credentials from cookie`,
+    });
+    user_id = Cookies.get('user_id') || null;
+    nonce = Cookies.get('nonce') || null;
+  }
 
   return new Promise((resolve, reject) => {
     socket.on('connect', () => {
       if (user_id === null || nonce === null) {
-        socket.emit('log_in', {});
+        log.debug({
+          type: 'login_new_user',
+          message: `logging in as new user`,
+        });
+        socket.emit('log_in');
       } else {
-        socket.emit('log_in', {
+        let credentials = {
           user_id,
           nonce,
+        };
+        log.debug({
+          type: 'login_cached_user',
+          message:
+            `logging in as new user with credentials` +
+            JSON.stringify(credentials),
         });
+        socket.emit('log_in', credentials);
       }
     });
 
     socket.on('login_success', (response: Credentials) => {
       log.debug({
         type: 'login_succes',
-        message: `logged in as new user with credentials ${JSON.stringify(
-          response,
-        )}`,
+        message: `logged in with credentials ${JSON.stringify(response)}`,
         credentials: response,
       });
       setCookiesAndResolve(resolve, response);

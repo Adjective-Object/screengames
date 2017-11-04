@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let eventQueue = new SocketEventQueue();
 
   let socket = io();
-  initSession(socket).then(({ user_id, nonce }) => {
+  initSession(socket, false).then(({ user_id, nonce }) => {
     socket.emit('join_room', {
       room_id: 'default',
       user_id: user_id,
