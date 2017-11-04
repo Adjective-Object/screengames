@@ -18,6 +18,9 @@ export default class User {
   }
 
   connect(socket: io.Socket) {
+    if (this.socket) {
+      this.socket.disconnect();
+    }
     this.connected = true;
     this.seq = 1;
     this.incomingEventQueue = new SocketEventQueue();
