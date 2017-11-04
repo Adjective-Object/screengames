@@ -7,6 +7,10 @@ import SocketEventQueue from '../../util/socket/SocketEventQueue';
 import io from 'socket.io-client';
 import guid from '../../util/guid';
 import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
+import initSession from '../util/negotiate-session';
+import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
+import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton';
+import EventDispatcher from './EventDispatcher';
 
 document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
@@ -16,71 +20,35 @@ document.addEventListener('DOMContentLoaded', () => {
   let eventQueue = new SocketEventQueue();
 
   let socket = io();
-  socket.on('connect', () => {
+  initSession(socket).then(({ user_id, nonce }) => {
     socket.emit('join_room', {
       room_id: 'default',
-      user_id: guid(),
-      board: true,
+      user_id: user_id,
+      nonce: nonce,
     });
   });
 
+  let eventDispatcher = new EventDispatcher()
+    .addConsumer(drawing)
+    .addConsumer(camera)
+    .addUpdateTrigger(() => {
+      renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
+    });
+
   socket.on('event', event => {
-    // Queue events
+    // Queue incoming events and dispatch them to consumers if any exist
     eventQueue.ingestEvent(event);
-    let events = eventQueue.getEvents();
-
-    if (events.length >= 1) {
-      // Ingest all applicable events to Drawing
-      eventQueue.clearEvents();
-      for (let event of events) {
-        if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
-          renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
-        }
-      }
-    }
+    let pending_events = eventQueue.getEvents();
+    if (pending_events.length == 0) return;
+    eventDispatcher.consumeEvents(pending_events);
+    eventQueue.clearEvents();
   });
 
-  const toggleFullscreenButton = document.getElementById('toggle-fullscreen');
-  toggleFullscreenButton.addEventListener('click', () => {
-    let doc = window.document;
-    let docEl = doc.documentElement;
+  new ToggleFullscreenButton(document.documentElement).bind(
+    document,
+    '.toggle-fullscreen-button',
+  );
 
-    let requestFullScreen =
-      docEl.requestFullscreen ||
-      docEl.mozRequestFullScreen ||
-      docEl.webkitRequestFullScreen ||
-      docEl.msRequestFullscreen;
-    let cancelFullScreen =
-      doc.exitFullscreen ||
-      doc.mozCancelFullScreen ||
-      doc.webkitExitFullscreen ||
-      doc.msExitFullscreen;
-
-    if (
-      !doc.fullscreenElement &&
-      !doc.mozFullScreenElement &&
-      !doc.webkitFullscreenElement &&
-      !doc.msFullscreenElement
-    ) {
-      toggleFullscreenButton.classList.add('fullscreen');
-      requestFullScreen.call(docEl);
-    } else {
-      cancelFullScreen.call(doc);
-      toggleFullscreenButton.classList.remove('fullscreen');
-    }
-  });
-
-  // Resize the canvas to the whenever it is reshaped
   const drawingContainer = document.getElementById('drawing-container');
-  const resizeDrawingToContainer = resize_event => {
-    let container_box = drawingContainer.getBoundingClientRect();
-    drawTarget.setAttribute('width', container_box.width);
-    drawTarget.setAttribute('height', container_box.height);
-    drawTarget.setAttribute(
-      'viewBox',
-      `0 0 ${container_box.width} ${container_box.height}`,
-    );
-  };
-  resizeDrawingToContainer();
-  window.addEventListener('resize', resizeDrawingToContainer);
+  new ResizeToContainer(drawingContainer, drawTarget).resize().bind(window);
 });

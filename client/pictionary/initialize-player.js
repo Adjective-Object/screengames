@@ -11,6 +11,7 @@ import transformToCanvasSpace from './transform-to-canvas-space';
 import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton';
 import DrawingTarget from './dom-event-bindings/DrawingTarget';
 import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
+import EventDispatcher from './EventDispatcher';
 
 document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
@@ -49,37 +50,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  socket.on('event', event => {
-    // Queue events
-    eventQueue.ingestEvent(event);
-    let events = eventQueue.getEvents();
+  let eventDispatcher = new EventDispatcher()
+    .addConsumer(drawing)
+    .addConsumer(camera)
+    .addUpdateTrigger(() => {
+      renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
+    });
 
-    if (events.length >= 1) {
-      // Ingest all applicable events to Drawing
-      eventQueue.clearEvents();
-      for (let event of events) {
-        if (drawing.canIngestEvent(event) && drawing.ingestEvent(event)) {
-          renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
-        }
-      }
-    }
+  socket.on('event', event => {
+    // Queue incoming events and dispatch them to consumers if any exist
+    eventQueue.ingestEvent(event);
+    let pending_events = eventQueue.getEvents();
+    if (pending_events.length == 0) return;
+    eventDispatcher.consumeEvents(pending_events);
+    eventQueue.clearEvents();
   });
 
   // Common handlers for handling a drawing
   function handleToolEvent(tool_event) {
     if (!tool_event) return;
-    let should_update = false;
+    eventDispatcher.consumeEvent(tool_event);
     if (drawing.canIngestEvent(tool_event)) {
-      drawing.ingestEvent(tool_event);
       socket.emit('event', tool_event);
-      should_update = true;
-    }
-    if (camera.canIngestEvent(tool_event)) {
-      camera.ingestEvent(tool_event);
-      should_update = true;
-    }
-    if (should_update) {
-      renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
     }
   }
 
@@ -125,7 +117,5 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   const drawingContainer = document.getElementById('drawing-container');
-  new ResizeToContainer(drawingContainer, drawTarget)
-    .resize()
-    .bind(window);
+  new ResizeToContainer(drawingContainer, drawTarget).resize().bind(window);
 });
