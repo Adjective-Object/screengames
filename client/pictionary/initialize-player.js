@@ -10,6 +10,7 @@ import initSession from '../util/negotiate-session';
 import transformToCanvasSpace from './transform-to-canvas-space';
 import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton';
 import DrawingTarget from './dom-event-bindings/DrawingTarget';
+import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
 
 document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pen_tool: pen_tool,
     canvas_panning_tool: new CanvasPanningTool(),
   };
+
   let current_tool = tools['pen_tool'];
   const setActiveTool = tool_elem => {
     // Set the current tool from the tool's id
@@ -93,12 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     )
     .bind();
 
-  Array.from(document.querySelectorAll('[tool-id]')).map(button => {
-    button.addEventListener('click', e => {
-      setActiveTool(e.currentTarget);
-    });
-  });
-
   let clearCanvasButton = document.getElementById('clear-canvas');
   clearCanvasButton.addEventListener('click', e => {
     let clear_canvas_event = {
@@ -117,21 +113,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  Array.from(document.querySelectorAll('[tool-id]')).map(button => {
+    button.addEventListener('click', e => {
+      setActiveTool(e.currentTarget);
+    });
+  });
+
   new ToggleFullscreenButton(document.documentElement).bind(
     document,
     '.toggle-fullscreen-button',
   );
 
   const drawingContainer = document.getElementById('drawing-container');
-  const resizeDrawingToContainer = resize_event => {
-    let container_box = drawingContainer.getBoundingClientRect();
-    drawTarget.setAttribute('width', container_box.width);
-    drawTarget.setAttribute('height', container_box.height);
-    drawTarget.setAttribute(
-      'viewBox',
-      `0 0 ${container_box.width} ${container_box.height}`,
-    );
-  };
-  resizeDrawingToContainer();
-  window.addEventListener('resize', resizeDrawingToContainer);
+  new ResizeToContainer(drawingContainer, drawTarget)
+    .resize()
+    .bind(window);
 });
