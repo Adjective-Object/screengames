@@ -3,25 +3,11 @@ import type Camera from './Camera';
 import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
 import type { Matrix } from 'transformation-matrix';
 
-// temp fix because flow builtins do not yet support HTMLSvgElement
-// see Issue #2332
-
-declare class _HTMLSvgElement extends HTMLElement {
-  viewBox: {
-    baseVal: {
-      x: number,
-      y: number,
-      width: number,
-      height: number,
-    },
-  },
-}
-
 // Convert from DOM space to canvas space based on the current SVG bounding
 // rectangle and the viewbox of the rtarget
 const transformToCanvasSpace = (
   camera: Camera,
-  draw_target: _HTMLSvgElement,
+  draw_target: HTMLSvgElement,
   mouse_event: { clientX: number, clientY: number },
 ): Matrix => {
   let boundingRect = draw_target.getBoundingClientRect();

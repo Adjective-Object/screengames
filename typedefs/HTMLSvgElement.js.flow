@@ -1,0 +1,13 @@
+// temp fix because flow builtins do not yet support HTMLSvgElement
+// see Issue #2332
+
+declare export class HTMLSvgElement extends HTMLElement {
+  viewBox: {
+    baseVal: {
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    },
+  },
+}

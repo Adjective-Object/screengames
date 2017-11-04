@@ -5,6 +5,8 @@
 client/.*
 
 [libs]
+./flow-typed
+./typedefs
 
 [options]
 
