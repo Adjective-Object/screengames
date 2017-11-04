@@ -1,14 +1,8 @@
+// @flow
 import log from '../../util/log';
+import type { Event as AnyEvent, EventConsumer } from './EventConsumer';
+
 /*
-interface Point {
-    x: float,
-    y: float,
-}
-
-interface Stroke {
-    points: Point[],
-
-}
 
 interface Drawing {
     strokes: {
@@ -44,8 +38,59 @@ interface ClearEvent {
 
 */
 
-export default class Drawing {
-  constructor(props) {
+type Point = {
+  x: number,
+  y: number,
+};
+
+type Stroke = {
+  points: Point[],
+};
+
+type InitializeCanvasEvent = {
+  type: 'initialize',
+  initial_state: {
+    strokes: { [string]: Stroke },
+    strokeOrder: string[],
+  },
+};
+
+type AppendStrokeEvent = {
+  type: 'append_stroke',
+  stroke_id: string,
+  point: Point,
+};
+
+type AddStrokeEvent = {
+  type: 'add_stroke',
+  stroke_id: string,
+  point: Point,
+};
+
+type ClearStrokeEvent = {
+  type: 'clear_stroke',
+  stroke_id: string,
+};
+
+type ClearCanvasEvent = {
+  type: 'clear_canvas',
+};
+
+export type Events =
+  | InitializeCanvasEvent
+  | AppendStrokeEvent
+  | AddStrokeEvent
+  | ClearStrokeEvent
+  | ClearCanvasEvent;
+
+export default class Drawing implements EventConsumer {
+  strokes: { [string]: Stroke };
+  strokeOrder: string[];
+  currentStrokeID: string | null;
+  lastSampleTime: number | null;
+  pendingSample: Point | null;
+
+  constructor() {
     // Long-lived state
     this.strokes = {};
     this.strokeOrder = [];
@@ -56,7 +101,7 @@ export default class Drawing {
     this.pendingSample = null;
   }
 
-  __addPointToStroke(stroke_id, point) {
+  __addPointToStroke(stroke_id: string, point: Point): void {
     if (this.strokes.hasOwnProperty(stroke_id)) {
       this.strokes[stroke_id].points.push(point);
     } else {
@@ -67,7 +112,7 @@ export default class Drawing {
     }
   }
 
-  ingestEvent(event) {
+  ingestEvent(event: AnyEvent): boolean {
     switch (event.type) {
       case 'initialize':
         if (!this.isEmpty()) {
@@ -110,7 +155,7 @@ export default class Drawing {
     }
   }
 
-  canIngestEvent(event) {
+  canIngestEvent(event: AnyEvent): boolean {
     const allowed_events = [
       'add_stroke',
       'append_stroke',
@@ -121,12 +166,12 @@ export default class Drawing {
     return allowed_events.indexOf(event.type) !== -1;
   }
 
-  getLastPointOfStroke(stroke_id) {
+  getLastPointOfStroke(stroke_id: string): Point {
     let points = this.strokes[stroke_id].points;
     return points[points.length - 1];
   }
 
-  isEmpty() {
+  isEmpty(): boolean {
     return (
       Object.keys(this.strokes).length === 0 && this.strokeOrder.length === 0
     );
