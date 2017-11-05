@@ -1,23 +1,32 @@
+// @flow
 import Drawing from './Drawing';
-import Camera from './Camera';
+import AutoZoomCamera from './AutoZoomCamera';
 import PenTool from './tools/PenTool';
 import CanvasPanningTool from './tools/CanvasPanningTool';
 import DrawingRenderer from './DrawingRenderer';
 import SocketEventQueue from '../../util/socket/SocketEventQueue';
 import io from 'socket.io-client';
-import guid from '../../util/guid';
-import { inverse as inverseMatrix, applyToPoint } from 'transformation-matrix';
 import initSession from '../util/negotiate-session';
 import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
 import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton';
 import EventDispatcher from './EventDispatcher';
+import log from '../../util/log';
+import CodedError from '../../util/CodedError';
 
 document.addEventListener('DOMContentLoaded', () => {
-  let drawing = new Drawing();
-  let camera = new Camera();
-  let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById('draw-target');
+  if (drawTarget === null) {
+    throw new CodedError({
+      type: 'drawing-target-null',
+      message: `got null for selector #draw-target, can't continue.`,
+    });
+  }
+
+  let drawing = new Drawing();
+  let renderer = new DrawingRenderer();
   let eventQueue = new SocketEventQueue();
+  // $FlowFixMe HTMLSvgElement not officially defined. Can't check at runtime
+  let camera = new AutoZoomCamera(0.05, drawTarget);
 
   let socket = io();
   initSession(socket, false).then(({ user_id, nonce }) => {
@@ -44,11 +53,26 @@ document.addEventListener('DOMContentLoaded', () => {
     eventQueue.clearEvents();
   });
 
-  new ToggleFullscreenButton(document.documentElement).bind(
-    document,
-    '.toggle-fullscreen-button',
-  );
+  if (document.documentElement !== null) {
+    new ToggleFullscreenButton(document.documentElement).bind(
+      document,
+      '.toggle-fullscreen-button',
+    );
+  } else {
+    log.warn({
+      type: 'document-element-null',
+      message: 'document.documentElement is null. Fullscreen will be busted',
+    });
+  }
 
   const drawingContainer = document.getElementById('drawing-container');
-  new ResizeToContainer(drawingContainer, drawTarget).resize().bind(window);
+  if (drawingContainer !== null) {
+    // $FlowFixMe HTMLSvgElement not officially defined. Can't check at runtime
+    new ResizeToContainer(drawingContainer, drawTarget).resize().bind(window);
+  } else {
+    log.warn({
+      type: 'drawing-container-null',
+      message: 'cannot find element #drawing-container in dom',
+    });
+  }
 });

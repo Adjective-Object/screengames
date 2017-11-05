@@ -2,12 +2,12 @@
 import delegateEvent from './delegate-event';
 
 export default class ToggleFullscreenButton {
-  fullscreenTarget: HTMLElement;
-  constructor(fullscreen_target: HTMLElement) {
+  fullscreenTarget: Element;
+  constructor(fullscreen_target: Element) {
     this.fullscreenTarget = fullscreen_target;
   }
 
-  bind(scope: HTMLElement, selector: string) {
+  bind(scope: Node, selector: string) {
     delegateEvent(
       scope,
       'click',
