@@ -14,6 +14,10 @@ type CameraCenterCanvasEvent = {
 
 export type Events = CameraTransformEvent | CameraCenterCanvasEvent;
 
+export interface ICamera {
+  getTransform(): Matrix,
+}
+
 export default class Camera {
   transform: Matrix;
 
@@ -37,5 +41,9 @@ export default class Camera {
   canIngestEvent(event: Event) {
     const allowed_events = ['adjust_transform', 'center_canvas'];
     return allowed_events.indexOf(event.type) !== -1;
+  }
+
+  getTransform() {
+    return this.transform;
   }
 }

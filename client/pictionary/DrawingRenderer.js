@@ -3,7 +3,7 @@ import { toString as transformToString } from 'transformation-matrix';
 export default class DrawingRenderer {
   renderDrawingToSVG(camera, drawing, drawing_client, svg) {
     let group = svg.querySelector('g');
-    group.setAttribute('transform', transformToString(camera.transform));
+    group.setAttribute('transform', transformToString(camera.getTransform()));
     group.innerHTML = '';
     for (let strokeID of drawing.strokeOrder) {
       // Insert a new line as the last child of the svg
