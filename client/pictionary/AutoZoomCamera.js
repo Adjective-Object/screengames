@@ -73,6 +73,7 @@ export default class AutoZoomCamera implements ICamera, EventConsumer {
     let scale_ratio = Math.min(
       this.drawTarget.viewBox.baseVal.width / this.width,
       this.drawTarget.viewBox.baseVal.height / this.height,
+      1,
     );
     let margin_ratio = 1 + this.margin * 2;
     let trans = transform(
