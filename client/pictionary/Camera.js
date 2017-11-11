@@ -1,7 +1,7 @@
 // @flow
 import { transform, identity } from 'transformation-matrix';
 import type { Matrix } from 'transformation-matrix';
-import type { Event, EventConsumer } from './EventConsumer';
+import type { IEventConsumer } from '../common/IEventConsumer';
 
 type CameraTransformEvent = {
   type: 'adjust_transform',
@@ -12,20 +12,20 @@ type CameraCenterCanvasEvent = {
   type: 'center_canvas',
 };
 
-export type Events = CameraTransformEvent | CameraCenterCanvasEvent;
+export type CameraEvent = CameraTransformEvent | CameraCenterCanvasEvent;
 
 export interface ICamera {
   getTransform(): Matrix,
 }
 
-export default class Camera {
+export default class Camera implements ICamera, IEventConsumer<CameraEvent> {
   transform: Matrix;
 
   constructor() {
     this.transform = identity();
   }
 
-  ingestEvent(event: Event): boolean {
+  ingestEvent(event: CameraEvent): boolean {
     switch (event.type) {
       case 'adjust_transform':
         this.transform = transform(this.transform, event.transform);
@@ -38,9 +38,10 @@ export default class Camera {
     }
   }
 
-  canIngestEvent(event: Event) {
-    const allowed_events = ['adjust_transform', 'center_canvas'];
-    return allowed_events.indexOf(event.type) !== -1;
+  castEvent(event: Object): CameraEvent | null {
+    return ['adjust_transform', 'center_canvas'].includes(event.type)
+      ? (event: CameraEvent)
+      : null;
   }
 
   getTransform() {

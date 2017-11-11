@@ -2,22 +2,13 @@
 import { transform, identity, translate, scale } from 'transformation-matrix';
 import PointSpace from './PointSpace';
 import type { Matrix } from 'transformation-matrix';
-import type { Event, EventConsumer } from './EventConsumer';
+import type { IEventConsumer } from '../common/IEventConsumer';
 import type { Point } from './Drawing';
 import type { ICamera } from './Camera';
+import type { DrawingEvent } from './Drawing';
 
-type CameraTransformEvent = {
-  type: 'adjust_transform',
-  transform: Matrix,
-};
-
-type CameraCenterCanvasEvent = {
-  type: 'center_canvas',
-};
-
-export type Events = CameraTransformEvent | CameraCenterCanvasEvent;
-
-export default class AutoZoomCamera implements ICamera, EventConsumer {
+export default class AutoZoomCamera
+  implements ICamera, IEventConsumer<DrawingEvent> {
   drawTarget: HTMLSvgElement;
   margin: number;
   x: number;
@@ -34,7 +25,7 @@ export default class AutoZoomCamera implements ICamera, EventConsumer {
     this.drawTarget = draw_target;
   }
 
-  ingestEvent(event: Event): boolean {
+  ingestEvent(event: DrawingEvent): boolean {
     switch (event.type) {
       case 'initialize':
         for (let strokeID in event.initial_state.strokes) {
@@ -59,14 +50,15 @@ export default class AutoZoomCamera implements ICamera, EventConsumer {
     }
   }
 
-  canIngestEvent(event: Event) {
-    const allowed_events = [
+  castEvent(event: Object): DrawingEvent | null {
+    return [
       'initialize',
       'append_stroke',
       'add_stroke',
       'clear_canvas',
-    ];
-    return allowed_events.indexOf(event.type) !== -1;
+    ].includes(event.type)
+      ? (event: DrawingEvent)
+      : null;
   }
 
   getTransform(): Matrix {

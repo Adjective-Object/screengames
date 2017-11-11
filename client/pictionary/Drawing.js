@@ -1,6 +1,6 @@
 // @flow
 import log from '../../util/log';
-import type { Event as AnyEvent, EventConsumer } from './EventConsumer';
+import type { IEventConsumer } from '../common/IEventConsumer';
 
 /*
 
@@ -76,14 +76,14 @@ type ClearCanvasEvent = {
   type: 'clear_canvas',
 };
 
-export type Events =
+export type DrawingEvent =
   | InitializeCanvasEvent
   | AppendStrokeEvent
   | AddStrokeEvent
   | ClearStrokeEvent
   | ClearCanvasEvent;
 
-export default class Drawing implements EventConsumer {
+export default class Drawing implements IEventConsumer<DrawingEvent> {
   strokes: { [string]: Stroke };
   strokeOrder: string[];
   currentStrokeID: string | null;
@@ -112,7 +112,7 @@ export default class Drawing implements EventConsumer {
     }
   }
 
-  ingestEvent(event: AnyEvent): boolean {
+  ingestEvent(event: DrawingEvent): boolean {
     switch (event.type) {
       case 'initialize':
         if (!this.isEmpty()) {
@@ -155,15 +155,16 @@ export default class Drawing implements EventConsumer {
     }
   }
 
-  canIngestEvent(event: AnyEvent): boolean {
-    const allowed_events = [
+  castEvent(event: Object): DrawingEvent | null {
+    return [
       'add_stroke',
       'append_stroke',
       'initialize',
       'clear_stroke',
       'clear_canvas',
-    ];
-    return allowed_events.indexOf(event.type) !== -1;
+    ].includes(event.type)
+      ? (event: DrawingEvent)
+      : null;
   }
 
   getLastPointOfStroke(stroke_id: string): Point {

@@ -1,10 +1,11 @@
 // @flow
-import type { EventConsumer, Event } from './EventConsumer';
+import type { IEventConsumer, GenericEvent } from '../common/IEventConsumer';
+import filterNulls from '../../util/filter-nulls';
 
 export type EventTrigger = () => void;
 
 export default class EventDispatcher {
-  consumers: EventConsumer[];
+  consumers: IEventConsumer<*>[];
   triggers: EventTrigger[];
 
   constructor() {
@@ -12,7 +13,7 @@ export default class EventDispatcher {
     this.triggers = [];
   }
 
-  addConsumer(consumer: EventConsumer): EventDispatcher {
+  addConsumer(consumer: IEventConsumer<*>): EventDispatcher {
     this.consumers.push(consumer);
     return this;
   }
@@ -22,14 +23,14 @@ export default class EventDispatcher {
     return this;
   }
 
-  consumeEvent(event: Event) {
+  consumeEvent(event: GenericEvent) {
     let should_update = this._consumeEventWithoutUpdatingTriggers(event);
     if (should_update) {
       this._updateAllTriggers();
     }
   }
 
-  consumeEvents(events: Event[]) {
+  consumeEvents(events: GenericEvent[]) {
     let should_update = events
       .map(event => this._consumeEventWithoutUpdatingTriggers(event))
       .reduce((r1, r2) => r1 || r2, false);
@@ -38,9 +39,10 @@ export default class EventDispatcher {
     }
   }
 
-  _consumeEventWithoutUpdatingTriggers(event: Event): boolean {
-    return this.consumers
-      .filter(consumer => consumer.canIngestEvent(event))
+  _consumeEventWithoutUpdatingTriggers(event: GenericEvent): boolean {
+    return filterNulls(
+      this.consumers.map(consumer => consumer.castEvent(event)),
+    )
       .map(consumer => consumer.ingestEvent(event))
       .reduce((r1, r2) => r1 || r2, false);
   }
