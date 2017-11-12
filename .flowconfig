@@ -6,9 +6,10 @@ client/.*
 
 [libs]
 ./flow-typed
-./typedefs
+./typedefs/globals
 
 [options]
+module.name_mapper.extension='handlebars'->'<PROJECT_ROOT>/typedefs/stubs/HandlebarsStub'
 
 [version]
 0.57.3

@@ -22,5 +22,12 @@ exports.plugins = {
 };
 
 exports.conventions = {
-  assets: /assets\//     // vendor/jquery/files/jq.img
-}
+  assets: /assets\//,     // vendor/jquery/files/jq.img
+  ignored: /^(bower_components|node_modules|vendor)/,
+};
+
+exports.npm = {
+  globals: {
+    Handlebars: 'handlebars',
+  },
+};
