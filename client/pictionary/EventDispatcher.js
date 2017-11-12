@@ -40,10 +40,11 @@ export default class EventDispatcher {
   }
 
   _consumeEventWithoutUpdatingTriggers(event: GenericEvent): boolean {
-    return filterNulls(
-      this.consumers.map(consumer => consumer.castEvent(event)),
-    )
-      .map(consumer => consumer.ingestEvent(event))
+    return this.consumers
+      .map(consumer => {
+        let typed_event = consumer.castEvent(event);
+        return typed_event !== null ? consumer.ingestEvent(typed_event) : false;
+      })
       .reduce((r1, r2) => r1 || r2, false);
   }
 

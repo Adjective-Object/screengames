@@ -12,13 +12,22 @@ import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton'
 import DrawingTarget from './dom-event-bindings/DrawingTarget';
 import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
 import EventDispatcher from './EventDispatcher';
+import UserDataStore from '../common/UserDataStore';
+import UserListComponent from './components/UserList';
+import type { TPictionaryUserData } from './types';
 
 document.addEventListener('DOMContentLoaded', () => {
   let drawing = new Drawing();
   let camera = new Camera();
+  // TODO use pictionay data validation here
   let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById('draw-target');
   let eventQueue = new SocketEventQueue();
+  let user_data_store: UserDataStore<TPictionaryUserData> = new UserDataStore(
+    a => a,
+  );
+  let user_list_element = document.getElementById('user-list');
+  let user_list_component = new UserListComponent(user_list_element);
 
   // The pen tool is used in rendering, so keep it in scope
   let pen_tool = new PenTool();
@@ -50,11 +59,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  let eventDispatcher = new EventDispatcher()
+  let drawingEventDispatcher = new EventDispatcher()
     .addConsumer(drawing)
     .addConsumer(camera)
     .addUpdateTrigger(() => {
       renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
+    });
+
+  let userEventDispatcher = new EventDispatcher()
+    .addConsumer(user_data_store)
+    .addUpdateTrigger(() => {
+      user_list_component.render(user_data_store);
     });
 
   socket.on('event', event => {
@@ -62,15 +77,17 @@ document.addEventListener('DOMContentLoaded', () => {
     eventQueue.ingestEvent(event);
     let pending_events = eventQueue.getEvents();
     if (pending_events.length == 0) return;
-    eventDispatcher.consumeEvents(pending_events);
+    drawingEventDispatcher.consumeEvents(pending_events);
+    userEventDispatcher.consumeEvents(pending_events);
     eventQueue.clearEvents();
   });
 
   // Common handlers for handling a drawing
   function handleToolEvent(tool_event) {
     if (!tool_event) return;
-    eventDispatcher.consumeEvent(tool_event);
-    if (drawing.canIngestEvent(tool_event)) {
+    drawingEventDispatcher.consumeEvent(tool_event);
+    let event = drawing.castEvent(tool_event);
+    if (event) {
       socket.emit('event', tool_event);
     }
   }

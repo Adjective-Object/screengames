@@ -87,15 +87,16 @@ export default class SocketEventQueue {
     let new_pending = _.range(Math.max(this.maxSeq, 1), event.seq).filter(
       i => this.queuedSeq.indexOf(i) === -1,
     );
+    this.pendingSeq = this.pendingSeq.concat(new_pending);
     if (this.queuedEvents.length % 100 == 0) {
       log.warn({
         type: 'event_queue_high',
-        message: `event queue reached ${this.queuedEvents
-          .length} pending events`,
+        message:
+          `event queue reached ${this.queuedEvents.length}` +
+          ` pending events (pending: ${this.pendingSeq})`,
         event_count: this.queuedEvents.length,
       });
     }
-    this.pendingSeq = this.pendingSeq.concat(new_pending);
     this.maxSeq = Math.max(this.maxSeq, event.seq);
   }
 

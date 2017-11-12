@@ -1,1 +1,1 @@
-declare export var HandlebarsFunction : (any) => string
+declare export var HandlebarsFunction: any => string;

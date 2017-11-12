@@ -28,8 +28,9 @@ export default class Pictionary extends Game {
     };
   }
 
-  processClientEvent(user_id, event) {
-    if (this.drawing.canIngestEvent(event)) {
+  processClientEvent(user_id, untyped_event) {
+    let event = this.drawing.castEvent(untyped_event);
+    if (event) {
       this.drawing.ingestEvent(event);
       this.room.broadcast(event, { exclude: [user_id] });
     }
