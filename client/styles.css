@@ -79,12 +79,7 @@ body {
   top: 0;
   left: 0;
   max-height: 100%;
-  opacity: 0.5;
   overflow-y: auto;
-}
-
-#user-list:hover {
-  opacity: 1;
 }
 
 .user-icon {
