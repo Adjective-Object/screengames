@@ -1,9 +1,10 @@
 // @flow
 import type { Matrix } from 'transformation-matrix';
-import type { Event, EventConsumer } from './EventConsumer';
+import type { DrawingEvent } from './Drawing';
+import type { IEventConsumer } from '../common/IEventConsumer';
 import type { Point } from './Drawing';
 
-export default class BoundTracker implements EventConsumer {
+export default class BoundTracker implements IEventConsumer<DrawingEvent> {
   x: number;
   y: number;
   width: number;
@@ -16,7 +17,7 @@ export default class BoundTracker implements EventConsumer {
     this.height = 1;
   }
 
-  ingestEvent(event: Event): boolean {
+  ingestEvent(event: DrawingEvent): boolean {
     switch (event.type) {
       case 'initialize':
         for (let strokeID in event.initial_state.strokes) {
@@ -41,14 +42,15 @@ export default class BoundTracker implements EventConsumer {
     }
   }
 
-  canIngestEvent(event: Event) {
-    const allowed_events = [
+  castEvent(event: Object): DrawingEvent | null {
+    return [
       'initialize',
       'append_stroke',
       'add_stroke',
       'clear_canvas',
-    ];
-    return allowed_events.indexOf(event.type) !== -1;
+    ].includes(event.type)
+      ? (event: DrawingEvent)
+      : null;
   }
 
   __adjustBounding(point: Point): void {

@@ -12,6 +12,9 @@ import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton'
 import EventDispatcher from './EventDispatcher';
 import log from '../../util/log';
 import CodedError from '../../util/CodedError';
+import UserDataStore from '../common/UserDataStore';
+import UserListComponent from './components/UserList';
+import type { TPictionaryUserData } from './types';
 
 document.addEventListener('DOMContentLoaded', () => {
   let drawTarget = document.getElementById('draw-target');
@@ -21,6 +24,18 @@ document.addEventListener('DOMContentLoaded', () => {
       message: `got null for selector #draw-target, can't continue.`,
     });
   }
+  let user_list_element = document.getElementById('user-list');
+  if (user_list_element === null) {
+    throw new CodedError({
+      type: 'user-list-null',
+      message: `got null for selector #user-list, can't continue.`,
+    });
+  }
+
+  let user_data_store: UserDataStore<TPictionaryUserData> = new UserDataStore(
+    a => a,
+  );
+  let user_list_component = new UserListComponent(user_list_element);
 
   let drawing = new Drawing();
   let renderer = new DrawingRenderer();
@@ -44,12 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
       renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
     });
 
+  let userEventDispatcher = new EventDispatcher()
+    .addConsumer(user_data_store)
+    .addUpdateTrigger(() => {
+      user_list_component.render(user_data_store);
+    });
+
   socket.on('event', event => {
     // Queue incoming events and dispatch them to consumers if any exist
     eventQueue.ingestEvent(event);
     let pending_events = eventQueue.getEvents();
     if (pending_events.length == 0) return;
     eventDispatcher.consumeEvents(pending_events);
+    userEventDispatcher.consumeEvents(pending_events);
     eventQueue.clearEvents();
   });
 

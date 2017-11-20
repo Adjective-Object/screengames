@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let boundTracker = new BoundTracker();
   let drawing = new Drawing();
   let camera = new Camera();
+  // TODO use pictionay data validation here
   let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById('draw-target');
   let eventQueue = new SocketEventQueue();
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  let eventDispatcher = new EventDispatcher()
+  let drawingEventDispatcher = new EventDispatcher()
     .addConsumer(drawing)
     .addConsumer(camera)
     .addConsumer(boundTracker)
@@ -66,15 +67,16 @@ document.addEventListener('DOMContentLoaded', () => {
     eventQueue.ingestEvent(event);
     let pending_events = eventQueue.getEvents();
     if (pending_events.length == 0) return;
-    eventDispatcher.consumeEvents(pending_events);
+    drawingEventDispatcher.consumeEvents(pending_events);
     eventQueue.clearEvents();
   });
 
   // Common handlers for handling a drawing
   function handleToolEvent(tool_event) {
     if (!tool_event) return;
-    eventDispatcher.consumeEvent(tool_event);
-    if (drawing.canIngestEvent(tool_event)) {
+    drawingEventDispatcher.consumeEvent(tool_event);
+    let event = drawing.castEvent(tool_event);
+    if (event) {
       socket.emit('event', tool_event);
     }
   }

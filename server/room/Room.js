@@ -42,35 +42,45 @@ class Room {
   }
 
   addParticipant(user: User): void {
+    let initialUserData = this.currentGame.getInitialUserData(user);
     this.participants.set(user.id, {
       user: user,
-      userData: {},
+      userData: initialUserData,
     });
 
-    this.__sendGameState(user);
+    this.__sendInitialGameState(user);
 
-    this.updateUserData(user.id, {});
+    this.broadcast(
+      {
+        type: 'add_user',
+        user_id: user.id,
+        user_data: initialUserData,
+      },
+      {
+        exclude: [user.id],
+      },
+    );
   }
 
   recoverParticipantSession(user: User): void {
-    this.__sendGameState(user);
+    this.__sendInitialGameState(user);
   }
 
-  __sendGameState(user: User): void {
+  __sendInitialGameState(user: User): void {
     // Send initial information about other users to clients as they join
+    let participant_user_data = {};
+    for (let [
+      participant_id: ID_of<User>,
+      participant: Participant,
+    ] of this.participants.entries()) {
+      participant_user_data[id_to_string(participant_id)] =
+        participant.userData;
+    }
     user.socket.emit('event', {
-      seq: user.seq++,
-      type: 'join_request_success',
-      participant_user_data: mapValues(
-        this.participants,
-        participant => participant.userData,
-      ),
-    });
-
-    user.socket.emit('event', {
-      seq: user.seq++,
       type: 'initialize',
+      seq: user.seq++,
       initial_state: this.currentGame.getState(),
+      participant_user_data,
     });
   }
 
