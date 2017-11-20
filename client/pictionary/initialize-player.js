@@ -91,8 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
     )
     .bind();
 
+  let toggleMenuButton = document.getElementById('toggle-menu');
+  let sidebar = document.getElementById('sidebar-menu');
+  toggleMenuButton.addEventListener('click', e => {
+    sidebar.classList.toggle('hidden');
+  });
+
   let clearCanvasButton = document.getElementById('clear-canvas');
   clearCanvasButton.addEventListener('click', e => {
+    sidebar.classList.add('hidden');
     let clear_canvas_event = {
       type: 'clear_canvas',
     };
@@ -102,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let centerCanvasButton = document.getElementById('center-canvas');
   centerCanvasButton.addEventListener('click', e => {
+    sidebar.classList.add('hidden');
     handleToolEvent({
       type: 'replace_transform',
       transform: transformFromCameraBounds(

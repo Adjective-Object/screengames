@@ -18,15 +18,24 @@
      height="400"
      viewbox="0 0 400 400"><g id="transform-host"></g></svg>
 </section>
+<section class="sidebar-menu hidden" id="sidebar-menu">
+<section class="overlay"></section>
+<nav class="drawer" id="navigation-menu">
+  <button class="toggle-menu-button" id="toggle-menu">
+    <em class="bar"/></em>
+    <em class="bar"/></em>
+  </button>
+  <button class="tool-button toggle-fullscreen-button" id="toggle-fullscreen">
+    <section class="start-fullscreen">{{{icon_start_fullscreen}}}<span>Enable Fullscreen</span></section>
+    <section class="stop-fullscreen">{{{icon_stop_fullscreen}}}<span> Disable Fullscreen</span></section>
+  </button>
+  <button class="tool-button" id="clear-canvas">{{{icon_clear_canvas}}}<span>Clear Canvas</span></button>
+  <button class="tool-button" id="center-canvas">{{{icon_center_canvas}}}<span>Center Canvas</span></button>
+</nav>
+</section>
 <nav class="pictionary-tools">
   <button class="tool-button" tool-id='pen_tool'>{{{icon_pen}}}</button>
   <button class="tool-button" tool-id='canvas_panning_tool'>{{{icon_pan}}}</button>
-  <button class="tool-button" id="clear-canvas">{{{icon_clear_canvas}}}</button>
-  <button class="tool-button" id="center-canvas">{{{icon_center_canvas}}}</button>
-  <button class="tool-button toggle-fullscreen-button" id="toggle-fullscreen">
-    <section class="start-fullscreen">{{{icon_start_fullscreen}}}</section>
-    <section class="stop-fullscreen">{{{icon_stop_fullscreen}}}</section>
-  </button>
 </nav>
 </section>
 </body>

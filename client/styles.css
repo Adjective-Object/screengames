@@ -14,6 +14,7 @@ body {
 *:after {
   padding: 0;
   margin: 0;
+  box-sizing: border-box;
 }
 
 .game-container {
@@ -46,18 +47,19 @@ body {
   position: relative;
 }
 
-.tool-button {
+.tool-button,
+.toggle-menu-button {
   border: none;
   background-color: transparent;
   outline: none;
 }
 
 .toggle-fullscreen-button:not(.fullscreen) .stop-fullscreen {
-  display: none;
+  display: none !important;
 }
 
 .toggle-fullscreen-button.fullscreen .start-fullscreen {
-  display: none;
+  display: none !important;
 }
 
 .tool-button svg {
@@ -66,10 +68,135 @@ body {
   transition: fill 0.15s;
 }
 
+.tool-button {
+  color: #ffffff;
+}
+
 .tool-button:active svg {
   fill: rgba(255, 255, 255, 0.5);
 }
 
+.tool-button:active {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .tool-button.selected svg {
   fill: #3498db;
+}
+
+.tool-button.selected {
+  color: #3498db;
+}
+
+.tool-button svg + span {
+  margin-left: 1em;
+}
+
+/* Sidebar menu */
+
+.sidebar-menu {
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.sidebar-menu .overlay {
+  z-index: 101;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  transition: opacity 0.2s;
+}
+
+.sidebar-menu .drawer {
+  position: relative;
+  z-index: 102;
+  height: 100%;
+  width: 200px;
+  background-color: #191919;
+  box-shadow: 0px 0px 12px 0px #222222;
+  pointer-events: all;
+  padding: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.sidebar-menu .drawer .tool-button,
+/* Second direct selector here handles separate enable / disable sections of
+ * the toggle-fullscreen button */
+  .sidebar-menu
+  .drawer
+  .tool-button
+  > section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-menu .drawer .tool-button:not(:last-of-type) {
+  margin-bottom: 8px;
+}
+
+.sidebar-menu.hidden .drawer {
+  transform: translateX(-200px);
+  box-shadow: 0px 0px 12px 0px rgba(0, 0, 0, 0);
+}
+
+.sidebar-menu.hidden .overlay {
+  opacity: 0;
+}
+
+/* Animated toggle-menu-button icon */
+
+.toggle-menu-button {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  top: 13px;
+  right: 13px;
+  transition: transform 0.2s;
+}
+
+.toggle-menu-button .bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: #ffffff;
+  transition: transform 0.2s, background-color 0.15s;
+  transform-origin: 50% 1px;
+}
+
+.toggle-menu-button:active .bar {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-menu.hidden .toggle-menu-button {
+  /* width (24px) + padding * 2 (8px * 2) +
+   * visual height of space above the top bar (8px) */
+  transform: translate(48px);
+}
+
+.sidebar-menu.hidden .toggle-menu-button .bar:nth-of-type(1) {
+  transform: translate(0, -2px);
+}
+
+.sidebar-menu.hidden .toggle-menu-button .bar:nth-of-type(2) {
+  transform: translate(0, 2px);
+}
+
+.sidebar-menu.hidden .toggle-menu-button .bar {
+  background-color: #222222;
+}
+
+.toggle-menu-button .bar:nth-of-type(1) {
+  transform: rotate(45deg) translate(0, 1px);
+}
+
+.toggle-menu-button .bar:nth-of-type(2) {
+  transform: rotate(-45deg) translate(0, -1px);
+  transform-origin: 50% 1px;
 }
