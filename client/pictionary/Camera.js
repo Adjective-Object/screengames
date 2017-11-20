@@ -30,6 +30,10 @@ export default class Camera {
       case 'adjust_transform':
         this.transform = transform(this.transform, event.transform);
         return true;
+      case 'replace_transform':
+        this.transform = event.transform;
+        return true;
+      case 'clear_canvas':
       case 'center_canvas':
         this.transform = identity();
         return true;
@@ -39,7 +43,12 @@ export default class Camera {
   }
 
   canIngestEvent(event: Event) {
-    const allowed_events = ['adjust_transform', 'center_canvas'];
+    const allowed_events = [
+      'adjust_transform',
+      'replace_transform',
+      'center_canvas',
+      'clear_canvas',
+    ];
     return allowed_events.indexOf(event.type) !== -1;
   }
 

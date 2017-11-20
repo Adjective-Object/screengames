@@ -3,6 +3,7 @@ import Camera from './Camera';
 import PenTool from './tools/PenTool';
 import CanvasPanningTool from './tools/CanvasPanningTool';
 import DrawingRenderer from './DrawingRenderer';
+import BoundTracker from './BoundTracker';
 import SocketEventQueue from '../../util/socket/SocketEventQueue';
 import io from 'socket.io-client';
 import guid from '../../util/guid';
@@ -12,8 +13,10 @@ import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton'
 import DrawingTarget from './dom-event-bindings/DrawingTarget';
 import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
 import EventDispatcher from './EventDispatcher';
+import transformFromCameraBounds from '../util/transform-from-camera-bounds';
 
 document.addEventListener('DOMContentLoaded', () => {
+  let boundTracker = new BoundTracker();
   let drawing = new Drawing();
   let camera = new Camera();
   let renderer = new DrawingRenderer();
@@ -53,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let eventDispatcher = new EventDispatcher()
     .addConsumer(drawing)
     .addConsumer(camera)
+    .addConsumer(boundTracker)
     .addUpdateTrigger(() => {
       renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
     });
@@ -92,16 +96,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let clear_canvas_event = {
       type: 'clear_canvas',
     };
-    if (drawing.ingestEvent(clear_canvas_event)) {
-      renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
-    }
+    handleToolEvent(clear_canvas_event);
     socket.emit('event', clear_canvas_event);
   });
 
   let centerCanvasButton = document.getElementById('center-canvas');
   centerCanvasButton.addEventListener('click', e => {
     handleToolEvent({
-      type: 'center_canvas',
+      type: 'replace_transform',
+      transform: transformFromCameraBounds(
+        boundTracker.getBounds(),
+        0.2,
+        drawTarget,
+      ),
     });
   });
 
