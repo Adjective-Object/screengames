@@ -10,6 +10,7 @@ import guid from '../../util/guid';
 import initSession from '../util/negotiate-session';
 import transformToCanvasSpace from './transform-to-canvas-space';
 import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton';
+import ToggleMenuButton from './dom-event-bindings/ToggleMenuButton';
 import DrawingTarget from './dom-event-bindings/DrawingTarget';
 import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
 import EventDispatcher from './EventDispatcher';
@@ -93,12 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
     )
     .bind();
 
-  let toggleMenuButton = document.getElementById('toggle-menu');
-  let sidebar = document.getElementById('sidebar-menu');
-  toggleMenuButton.addEventListener('click', e => {
-    sidebar.classList.toggle('hidden');
-  });
-
   let clearCanvasButton = document.getElementById('clear-canvas');
   clearCanvasButton.addEventListener('click', e => {
     sidebar.classList.add('hidden');
@@ -135,6 +130,11 @@ document.addEventListener('DOMContentLoaded', () => {
       setActiveTool(e.currentTarget);
     });
   });
+
+  new ToggleMenuButton(
+    document.getElementById('sidebar-menu'),
+    document.getElementById('toggle-menu'),
+  ).bind();
 
   new ToggleFullscreenButton(document.documentElement).bind(
     document,
