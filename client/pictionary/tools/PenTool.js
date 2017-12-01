@@ -34,14 +34,14 @@ export default class PenTool {
     this.timeDifferenceThreshold = 100;
 
     // Long-lived state
-    this.strokes = {};
-    this.strokeOrder = [];
+    this.currentStrokePoints = [];
 
     // State for tracking the current stroke
     this.currentStrokeID = null;
     this.lastSampleTime = null;
     this.pendingSample = null;
     this.lastScreenSpacePoint = null;
+    this.lastStrokes = [];
   }
 
   onTouchStart(points, time) {
@@ -50,10 +50,7 @@ export default class PenTool {
     this.lastScreenSpacePoint = points.screen_space[0];
     // TODO color ?
     this.currentStrokeID = guid();
-    this.strokeOrder.push(this.currentStrokeID);
-    this.strokes[this.currentStrokeID] = {
-      points: [point],
-    };
+    this.currentStrokePoints = [point];
     this.pendingSample = point;
     this.lastSampleTime = time;
     return {
@@ -116,6 +113,7 @@ export default class PenTool {
       point: this.pendingSample,
     };
     this.__addPointToCurrentStroke(this.pendingSample, time);
+    this.lastStrokes.push(this.currentStrokeID);
     this.currentStrokeID = null;
     this.pendingSample = null;
     return event;
@@ -126,12 +124,22 @@ export default class PenTool {
   }
 
   __addPointToCurrentStroke(point, time) {
-    this.strokes[this.currentStrokeID].points.push(point);
+    this.currentStrokePoints.push(point);
     this.lastSampleTime = time;
   }
 
   getLastPointOfStroke(stroke_id) {
-    let points = this.strokes[stroke_id].points;
-    return points[points.length - 1];
+    return this.currentStrokePoints[this.currentStrokePoints.length - 1];
+  }
+
+  popLastStroke() {
+    if (this.lastStrokes.length > 0) {
+      let stroke_id = this.lastStrokes.pop();
+      return {
+        type: 'clear_stroke',
+        stroke_id: stroke_id,
+      };
+    }
+    return null;
   }
 }

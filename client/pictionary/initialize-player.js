@@ -122,6 +122,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  let undoButton = document.getElementById('undo-stroke');
+  undoButton.addEventListener('click', e => {
+    let tool_event = pen_tool.popLastStroke();
+    if (tool_event !== null) {
+      handleToolEvent(tool_event);
+    }
+  });
+
   Array.from(document.querySelectorAll('[tool-id]')).map(button => {
     button.addEventListener('click', e => {
       setActiveTool(e.currentTarget);
