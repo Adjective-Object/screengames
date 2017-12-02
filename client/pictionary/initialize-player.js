@@ -13,6 +13,7 @@ import ToggleFullscreenButton from './dom-event-bindings/ToggleFullscreenButton'
 import ToggleMenuButton from './dom-event-bindings/ToggleMenuButton';
 import DrawingTarget from './dom-event-bindings/DrawingTarget';
 import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
+import ToolMenu from './dom-event-bindings/ToolMenu';
 import EventDispatcher from './EventDispatcher';
 import transformFromCameraBounds from '../util/transform-from-camera-bounds';
 
@@ -31,6 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
     pen_tool: pen_tool,
     canvas_panning_tool: new CanvasPanningTool(),
   };
+  current_tool = undefined;
+  new ToolMenu(document.documentElement, Object.keys(tools))
+    .onSelectTool(tool_id => {
+      // Only allow a tool to be selected if the current tool is not 'active'
+      if (current_tool === undefined || current_tool === null) {
+        return true;
+      }
+      if (current_tool.isActive()) {
+        return false;
+      }
+      current_tool = tools[tool_id];
+      return true;
+    })
+    .setActiveTool('pen_tool')
+    .bind(document.documentElement);
 
   let current_tool = tools['pen_tool'];
   const setActiveTool = tool_elem => {
