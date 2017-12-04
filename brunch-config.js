@@ -19,6 +19,13 @@ exports.files = {
 
 exports.plugins = {
   babel: JSON.parse(fs.readFileSync('./.babelrc', 'utf-8')),
+  postcss: {
+    processors: [
+      require('autoprefixer')(['last 8 versions']),
+      require('csswring')()
+    ]
+  }
+
 };
 
 exports.conventions = {
