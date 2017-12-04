@@ -16,6 +16,7 @@ import ResizeToContainer from './dom-event-bindings/ResizeToContainer';
 import ToolMenu from './dom-event-bindings/ToolMenu';
 import EventDispatcher from './EventDispatcher';
 import transformFromCameraBounds from '../util/transform-from-camera-bounds';
+import { toString as transformToString } from 'transformation-matrix';
 
 document.addEventListener('DOMContentLoaded', () => {
   let boundTracker = new BoundTracker();
@@ -25,6 +26,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let renderer = new DrawingRenderer();
   let drawTarget = document.getElementById('draw-target');
   let eventQueue = new SocketEventQueue();
+
+  let toggleMenu = new ToggleMenuButton(
+    document.getElementById('sidebar-menu'),
+    document.getElementById('toggle-menu'),
+    document.getElementById('sidebar-menu-overlay'),
+  ).bind();
 
   // The pen tool is used in rendering, so keep it in scope
   let pen_tool = new PenTool();
@@ -112,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let clearCanvasButton = document.getElementById('clear-canvas');
   clearCanvasButton.addEventListener('click', e => {
-    sidebar.classList.add('hidden');
+    toggleMenu.close();
     let clear_canvas_event = {
       type: 'clear_canvas',
     };
@@ -122,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let centerCanvasButton = document.getElementById('center-canvas');
   centerCanvasButton.addEventListener('click', e => {
-    sidebar.classList.add('hidden');
+    toggleMenu.close();
     handleToolEvent({
       type: 'replace_transform',
       transform: transformFromCameraBounds(
@@ -147,10 +154,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  new ToggleMenuButton(
-    document.getElementById('sidebar-menu'),
-    document.getElementById('toggle-menu'),
-  ).bind();
+  let saveCanvasButton = document.getElementById('save-canvas');
+  saveCanvasButton.addEventListener('mousedown', e => {
+    let original_svg_string = drawTarget.outerHTML;
+    let all_canvas_content_transform = transformFromCameraBounds(
+      boundTracker.getBounds(),
+      0.2,
+      drawTarget,
+    );
+    // Avoid changing the bounds on the rendered svg by doing this off dom
+    let host_section = document.createElement('section');
+    host_section.innerHTML = original_svg_string;
+    let transform_group = host_section.querySelector('g');
+    transform_group.setAttribute(
+      'transform',
+      transformToString(all_canvas_content_transform),
+    );
+    let transformed_svg_string = host_section.innerHTML;
+
+    // Build the output file
+    let svg_file = new File([transformed_svg_string], 'canvas.svg');
+    let svg_url = URL.createObjectURL(svg_file);
+    saveCanvasButton.href = svg_url;
+
+    // Make the download name something else
+    let now = new Date();
+    saveCanvasButton.download =
+      `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}-${guid()}` +
+      `-canvas.svg`;
+  });
+
+  saveCanvasButton.addEventListener('click', e => {
+    toggleMenu.close();
+  });
 
   new ToggleFullscreenButton(document.documentElement).bind(
     document,

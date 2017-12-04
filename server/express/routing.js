@@ -18,6 +18,7 @@ async function loadPictionaryClientAssets() {
     icon_start_fullscreen,
     icon_stop_fullscreen,
     icon_undo,
+    icon_save_canvas,
   ] = await Promise.all([
     fs.readFile('client/template/pictionary.handlebars', 'utf-8'),
     fs.readFile('client/template/pictionary-board.handlebars', 'utf-8'),
@@ -33,6 +34,7 @@ async function loadPictionaryClientAssets() {
     // TODO (adjective-object) change this to an actual undo button when
     // I'm back on network access
     fs.readFile('client/assets/img/ic_fullscreen_exit_white_24px.svg', 'utf-8'),
+    fs.readFile('client/assets/img/ic_file_download_white_24px.svg', 'utf-8'),
   ]);
   pictionary_assets = {
     pictionary_client_template: Handlebars.compile(pictionary_client_src),
@@ -44,6 +46,7 @@ async function loadPictionaryClientAssets() {
     icon_start_fullscreen,
     icon_stop_fullscreen,
     icon_undo,
+    icon_save_canvas,
   };
   return pictionary_assets;
 }
