@@ -1,25 +1,89 @@
 import { toString as transformToString } from 'transformation-matrix';
+import log from '../../util/log';
+import logRuntime from '../../util/log-runtime';
 
 export default class DrawingRenderer {
-  renderDrawingToSVG(camera, drawing, drawing_client, svg) {
+  @logRuntime('drawing-time')
+  renderDrawingToSVG(
+    camera,
+    drawing,
+    drawing_client,
+    svg,
+    ids_to_update = null,
+  ) {
     let group = svg.querySelector('g');
     group.setAttribute('transform', transformToString(camera.getTransform()));
-    group.innerHTML = '';
-    for (let strokeID of drawing.strokeOrder) {
-      // Insert a new line as the last child of the svg
-      group.appendChild(this.__renderBaseStroke(drawing.strokes[strokeID]));
+    let stroke_id_set = new Set(drawing.strokeOrder);
+    // Update existing strokes
+    for (let existing_stroke of Array.from(group.children)) {
+      // Remove the stroke if it is the pending line
+      if (existing_stroke.getAttribute('id') === 'pending-line') {
+        existing_stroke.remove();
+        continue;
+      }
 
+      let stroke_id = existing_stroke.getAttribute('data-stroke-id');
+      if (stroke_id === null) {
+        log.warn({
+          type: 'stroke_no_id',
+          message: 'stroke on DOM has no data-stroke-id attribute',
+        });
+        existing_stroke.remove();
+        continue;
+      }
+
+      // Remove the stroke if it was deleted from the source data
+      let stroke_data = drawing.strokes[stroke_id];
+      if (stroke_data === undefined) {
+        existing_stroke.remove();
+        continue;
+      }
+
+      stroke_id_set.delete(stroke_id);
+
+      // Update the stroke if it needs to be replaced
+      if (this.__shouldUpdateStroke(existing_stroke, stroke_data)) {
+        let new_stroke = this.__renderBaseStroke(stroke_data);
+        group.insertBefore(new_stroke, existing_stroke);
+        // console.log(group, existing_stroke)
+        existing_stroke.remove();
+      }
+
+      // render the pending line if this is the right line
       if (
         drawing_client !== null &&
-        strokeID == drawing_client.currentStrokeID
+        stroke_id == drawing_client.currentStrokeID
       ) {
         group.appendChild(
           this.__renderPendingLine(
-            drawing.strokes[strokeID],
+            drawing.strokes[stroke_id],
             drawing_client.pendingSample,
           ),
         );
       }
+    }
+
+    // Add new strokes
+    for (let new_stroke_id of stroke_id_set) {
+      let stroke_data = drawing.strokes[new_stroke_id];
+      group.appendChild(
+        this.__renderBaseStroke(drawing.strokes[new_stroke_id]),
+      );
+    }
+  }
+
+  __shouldUpdateStroke(existing_stroke, stroke_data) {
+    switch (existing_stroke.tagName) {
+      case 'circle':
+        return stroke_data.points.length != 1;
+      case 'line':
+        return stroke_data.points.lenth != 2;
+      case 'path':
+        let points_in_existing_stroke =
+          existing_stroke.getAttribute('d').match(/L|M/g) || [];
+        return points_in_existing_stroke.length !== stroke_data.points.length;
+      default:
+        return true;
     }
   }
 
@@ -33,6 +97,7 @@ export default class DrawingRenderer {
       circle.setAttribute('cy', stroke.points[0].y);
       circle.setAttribute('r', 1.5);
       circle.setAttribute('style', 'fill:black; stroke:black; stroke-width:0');
+      circle.setAttribute('data-stroke-id', stroke.id);
       return circle;
     }
 
@@ -44,6 +109,7 @@ export default class DrawingRenderer {
     path.setAttribute('d', points_string);
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('style', 'fill:none; stroke:black; stroke-width:3');
+    path.setAttribute('data-stroke-id', stroke.id);
     return path;
   }
 
@@ -56,6 +122,7 @@ export default class DrawingRenderer {
     line.setAttribute('y2', pending_sample.y);
     line.setAttribute('stroke-linecap', 'round');
     line.setAttribute('style', 'fill:none; stroke:red; stroke-width:3');
+    line.setAttribute('id', 'pending-line');
     return line;
   }
 

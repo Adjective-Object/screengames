@@ -45,6 +45,7 @@ export type Point = {
 
 type Stroke = {
   points: Point[],
+  id: string,
 };
 
 type InitializeCanvasEvent = {
@@ -107,6 +108,7 @@ export default class Drawing implements IEventConsumer<DrawingEvent> {
     } else {
       this.strokes[stroke_id] = {
         points: [point],
+        id: stroke_id,
       };
       this.strokeOrder.push(stroke_id);
     }
