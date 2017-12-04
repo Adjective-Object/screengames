@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .addConsumer(camera)
     .addConsumer(boundTracker)
     .addUpdateTrigger(() => {
-      renderer.renderDrawingToSVG(camera, drawing, null, drawTarget);
+      renderer.renderDrawingToSVG(camera, drawing, pen_tool, drawTarget);
     });
 
   socket.on('event', event => {
