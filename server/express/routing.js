@@ -31,9 +31,7 @@ async function loadPictionaryClientAssets() {
     ),
     fs.readFile('client/assets/img/ic_fullscreen_white_24px.svg', 'utf-8'),
     fs.readFile('client/assets/img/ic_fullscreen_exit_white_24px.svg', 'utf-8'),
-    // TODO (adjective-object) change this to an actual undo button when
-    // I'm back on network access
-    fs.readFile('client/assets/img/ic_fullscreen_exit_white_24px.svg', 'utf-8'),
+    fs.readFile('client/assets/img/ic_undo_24px.svg', 'utf-8'),
     fs.readFile('client/assets/img/ic_file_download_white_24px.svg', 'utf-8'),
   ]);
   pictionary_assets = {
