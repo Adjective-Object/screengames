@@ -44,6 +44,22 @@ if (environment === 'NODE') {
   });
 }
 
+if (environment === 'BROWSER') {
+  window.__logs = {
+    debug: [],
+    info: [],
+    warn: [],
+    error: [],
+  };
+  let addToLog = level => entry => window.__logs.push(entry);
+  let bunyan_logger = {
+    debug: addToLog('debug'),
+    info: addToLog('info'),
+    warn: addToLog('warn'),
+    error: addToLog('error'),
+  };
+}
+
 type FlexibleFunction = (...args: any[]) => void;
 
 class WrappedLogger {
@@ -72,15 +88,15 @@ class WrappedLogger {
     this._thing(logfn, ...arguments);
   }
   debug(...args: any[]) {
-    let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
+    let logfn = this.logger ? this.logger.debug.bind(this.logger) : null;
     this._thing(logfn, ...arguments);
   }
   warn(...args: any[]) {
-    let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
+    let logfn = this.logger ? this.logger.warn.bind(this.logger) : null;
     this._thing(logfn, ...arguments);
   }
   error(...args: any[]) {
-    let logfn = this.logger ? this.logger.info.bind(this.logger) : null;
+    let logfn = this.logger ? this.logger.error.bind(this.logger) : null;
     this._thing(logfn, ...arguments);
   }
 }
