@@ -167,17 +167,17 @@ body {
 
 .toggle-menu-button {
   position: absolute;
-  width: 18px;
-  height: 18px;
-  top: 13px;
-  right: 13px;
+  width: 24px;
+  height: 24px;
+  top: 8px;
+  right: 8px;
   transition: transform 0.2s, opacity 0.2s;
   transform: scale(1, 1);
 }
 
 .toggle-menu-button .bar {
   display: block;
-  width: 100%;
+  width: 18px;
   height: 2px;
   position: absolute;
   left: 0;
